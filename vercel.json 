@@ -2,7 +2,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "rewrites": [
-    { "source": "/GrameenLink/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/GrameenLink/(.*)", "dest": "/GrameenLink/$1" },
+    { "handle": "filesystem" }
   ]
 }
