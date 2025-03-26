@@ -840,7 +840,6 @@ function SustainabilityTracker() {
       </AnimatePresence>
     );
   };
-
   const renderInitiativeModal = () => {
     const isEditing = isEditInitiativeOpen;
     return (
@@ -856,171 +855,95 @@ function SustainabilityTracker() {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.9 }}
-              className="bg-white rounded-xl p-8 w-full max-w-2xl"
+              className="bg-white rounded-xl p-6 w-full max-w-2xl"
             >
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <Plus className="mr-2 text-green-600" /> 
-                {isEditing ? 'Edit Sustainability Initiative' : 'Add New Sustainability Initiative'}
+              <h2 className="text-xl font-bold mb-4 flex items-center">
+                <Plus className="mr-2 text-green-600" />
+                {isEditing ? 'Edit Initiative' : 'New Initiative'}
               </h2>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block mb-2">Initiative Title</label>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={initiativeForm.title}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, title: e.target.value})}
+                  className="col-span-2 p-2 border rounded-lg"
+                />
+                <textarea
+                  placeholder="Description"
+                  value={initiativeForm.description}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, description: e.target.value})}
+                  className="col-span-2 p-2 border rounded-lg h-20"
+                />
+                <select
+                  value={initiativeForm.status}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, status: e.target.value})}
+                  className="p-2 border rounded-lg"
+                >
+                  <option value="Planned">Planned</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+                <select
+                  value={initiativeForm.category}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, category: e.target.value})}
+                  className="p-2 border rounded-lg"
+                >
+                  <option value="">Category</option>
+                  <option value="Waste Reduction">Waste Reduction</option>
+                  <option value="Circular Economy">Circular Economy</option>
+                  <option value="Energy Efficiency">Energy Efficiency</option>
+                </select>
+                <div className="col-span-2 flex items-center">
                   <input
-                    type="text"
-                    placeholder="Title"
-                    value={initiativeForm.title}
-                    onChange={(e) => setInitiativeForm({...initiativeForm, title: e.target.value})}
-                    className="w-full p-2 border rounded-lg mb-4"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={initiativeForm.progress}
+                    onChange={(e) => setInitiativeForm({...initiativeForm, progress: parseInt(e.target.value)})}
+                    className="flex-grow"
                   />
+                  <span className="ml-2 w-10 text-right">{initiativeForm.progress}%</span>
                 </div>
-
-                <div>
-                  <label className="block mb-2">Description</label>
-                  <textarea
-                    placeholder="Description"
-                    value={initiativeForm.description}
-                    onChange={(e) => setInitiativeForm({...initiativeForm, description: e.target.value})}
-                    className="w-full p-2 border rounded-lg h-24 mb-4"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-2">Status</label>
-                    <select
-                      value={initiativeForm.status}
-                      onChange={(e) => setInitiativeForm({...initiativeForm, status: e.target.value})}
-                      className="w-full p-2 border rounded-lg mb-4"
-                    >
-                      <option value="Planned">Planned</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block mb-2">Category</label>
-                    <select
-                      value={initiativeForm.category}
-                      onChange={(e) => setInitiativeForm({...initiativeForm, category: e.target.value})}
-                      className="w-full p-2 border rounded-lg mb-4"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Waste Reduction">Waste Reduction</option>
-                      <option value="Circular Economy">Circular Economy</option>
-                      <option value="Energy Efficiency">Energy Efficiency</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block mb-2">Progress</label>
-                  <div className="flex items-center mb-4">
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={initiativeForm.progress}
-                      onChange={(e) => setInitiativeForm({...initiativeForm, progress: parseInt(e.target.value)})}
-                      className="w-full"
-                    />
-                    <span className="ml-4">{initiativeForm.progress}%</span>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-2">Budget ($)</label>
-                    <input
-                      type="number"
-                      placeholder="Budget"
-                      value={initiativeForm.budget}
-                      onChange={(e) => setInitiativeForm({...initiativeForm, budget: parseInt(e.target.value)})}
-                      className="w-full p-2 border rounded-lg mb-4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-2">Start Date</label>
-                    <input
-                      type="date"
-                      value={initiativeForm.startDate}
-                      onChange={(e) => setInitiativeForm({...initiativeForm, startDate: e.target.value})}
-                      className="w-full p-2 border rounded-lg mb-4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-2">Target Date</label>
-                    <input
-                      type="date"
-                      value={initiativeForm.targetDate}
-                      onChange={(e) => setInitiativeForm({...initiativeForm, targetDate: e.target.value})}
-                      className="w-full p-2 border rounded-lg mb-4"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold mb-2">Expected Impact</h3>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div>
-                      <label className="block text-xs mb-1">Carbon Reduction (%)</label>
+                <input
+                  type="number"
+                  placeholder="Budget ($)"
+                  value={initiativeForm.budget}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, budget: parseInt(e.target.value)})}
+                  className="p-2 border rounded-lg"
+                />
+                <input
+                  type="date"
+                  value={initiativeForm.startDate}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, startDate: e.target.value})}
+                  className="p-2 border rounded-lg"
+                />
+                <input
+                  type="date"
+                  value={initiativeForm.targetDate}
+                  onChange={(e) => setInitiativeForm({...initiativeForm, targetDate: e.target.value})}
+                  className="p-2 border rounded-lg"
+                />
+                <div className="col-span-2 grid grid-cols-3 gap-2 text-xs">
+                  {['carbonReduction', 'wasteElimination', 'costSavings'].map((key, idx) => (
+                    <div key={idx}>
+                      <label className="block mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')} (%)</label>
                       <input
                         type="number"
                         min="0"
                         max="100"
-                        value={initiativeForm.expectedImpact.carbonReduction}
+                        value={initiativeForm.expectedImpact[key]}
                         onChange={(e) => setInitiativeForm({
-                          ...initiativeForm, 
-                          expectedImpact: {
-                            ...initiativeForm.expectedImpact,
-                            carbonReduction: parseInt(e.target.value)
-                          }
+                          ...initiativeForm,
+                          expectedImpact: { ...initiativeForm.expectedImpact, [key]: parseInt(e.target.value) },
                         })}
-                        className="w-full p-1 border rounded text-xs"
+                        className="w-full p-1 border rounded"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs mb-1">Waste Elimination (%)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={initiativeForm.expectedImpact.wasteElimination}
-                        onChange={(e) => setInitiativeForm({
-                          ...initiativeForm, 
-                          expectedImpact: {
-                            ...initiativeForm.expectedImpact,
-                            wasteElimination: parseInt(e.target.value)
-                          }
-                        })}
-                        className="w-full p-1 border rounded text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs mb-1">Cost Savings (%)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={initiativeForm.expectedImpact.costSavings}
-                        onChange={(e) => setInitiativeForm({
-                          ...initiativeForm, 
-                          expectedImpact: {
-                            ...initiativeForm.expectedImpact,
-                            costSavings: parseInt(e.target.value)
-                          }
-                        })}
-                        className="w-full p-1 border rounded text-xs"
-                      />
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
-
-              <div className="flex justify-end mt-6 space-x-4">
+              <div className="flex justify-end mt-4 space-x-4">
                 <button
                   onClick={() => {
                     setIsAddInitiativeOpen(false);
@@ -1035,7 +958,7 @@ function SustainabilityTracker() {
                   onClick={isEditing ? handleEditInitiative : handleAddInitiative}
                   className="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700"
                 >
-                  {isEditing ? 'Update Initiative' : 'Add Initiative'}
+                  {isEditing ? 'Update' : 'Add'} Initiative
                 </button>
               </div>
             </motion.div>
@@ -1044,6 +967,7 @@ function SustainabilityTracker() {
       </AnimatePresence>
     );
   };
+  
 
   const renderMetricsChartModal = () => (
     <AnimatePresence>
