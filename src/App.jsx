@@ -392,7 +392,6 @@ function App() {
                   </div>
                 </section>
 
-               
                 {/* Footer */}
                 <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-16">
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-4 gap-8">
@@ -461,19 +460,16 @@ function App() {
                         Phone: 9013901322
                       </p>
                       <div className="mt-4 flex space-x-4">
-                        {['Globe', 'Send'].map((IconComponent, index) => {
-                          const Icon = eval(IconComponent);
-                          return (
-                            <motion.a 
-                              key={index}
-                              href="#"
-                              whileHover={{ scale: 1.2, rotate: 10 }}
-                              className="text-gray-400 hover:text-white"
-                            >
-                              <Icon />
-                            </motion.a>
-                          );
-                        })}
+                        {[Globe, Send].map((IconComponent, index) => (
+                          <motion.a 
+                            key={index}
+                            href="#"
+                            whileHover={{ scale: 1.2, rotate: 10 }}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <IconComponent />
+                          </motion.a>
+                        ))}
                       </div>
                     </div>
                   </div>
