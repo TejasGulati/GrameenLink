@@ -11,7 +11,6 @@ import {
   Edit, 
   Trash2, 
   Save,
-  LineChart,
   Clock,
   AlertTriangle,
   CheckCircle,
@@ -23,91 +22,251 @@ import {
   Database,
   Home,
   Target,
-  PieChart,
   Target as TargetIcon,
   X,
   Search,
   Grid,
   List,
   BarChart2,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Users,
+  Sun,
+  Droplet,
+  Shield,
+  DollarSign,
+  Heart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
-import { 
+import { useState, useEffect, useMemo, Component } from 'react';
+import {
   BarChart,
-  Bar, 
-  Pie,
-  XAxis, 
-  YAxis, 
-  Cell,
+  Bar,
+  LineChart,
   Line,
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  ZAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
 } from 'recharts';
-import { Droplet, Minus } from 'lucide-react';
+
+class ChartErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Chart Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div className="text-red-500 p-4">Chart failed to load. Please try again.</div>;
+    }
+    return this.props.children;
+  }
+}
 
 function SustainabilityTracker() {
+  // Enhanced initial data with rural impact metrics
   const initialSustainabilityTrends = [
-    { month: 'Jan', carbon: 1450, waste: 320, energy: 2800 },
-    { month: 'Feb', carbon: 1320, waste: 290, energy: 2650 },
-    { month: 'Mar', carbon: 1245, waste: 260, energy: 2500 },
-    { month: 'Apr', carbon: 1180, waste: 240, energy: 2350 },
-    { month: 'May', carbon: 1100, waste: 210, energy: 2200 },
-    { month: 'Jun', carbon: 1050, waste: 190, energy: 2100 }
+    { 
+      month: 'Jan', 
+      carbon: 1450, 
+      waste: 320, 
+      energy: 2800,
+      ruralJobs: 12,
+      localSupply: 35
+    },
+    { 
+      month: 'Feb', 
+      carbon: 1320, 
+      waste: 290, 
+      energy: 2650,
+      ruralJobs: 15,
+      localSupply: 42
+    },
+    { 
+      month: 'Mar', 
+      carbon: 1245, 
+      waste: 260, 
+      energy: 2500,
+      ruralJobs: 18,
+      localSupply: 50
+    },
+    { 
+      month: 'Apr', 
+      carbon: 1180, 
+      waste: 240, 
+      energy: 2350,
+      ruralJobs: 22,
+      localSupply: 58
+    },
+    { 
+      month: 'May', 
+      carbon: 1100, 
+      waste: 210, 
+      energy: 2200,
+      ruralJobs: 25,
+      localSupply: 65
+    },
+    { 
+      month: 'Jun', 
+      carbon: 1050, 
+      waste: 190, 
+      energy: 2100,
+      ruralJobs: 30,
+      localSupply: 72
+    }
   ];
 
-  const [sustainabilityMetrics, setSustainabilityMetrics] = useState({
-    carbonFootprint: 1245,
-    wasteRecycled: 456,
-    packagingReduction: 38,
-    energyEfficiency: 67,
-    transportEmissions: 210,
-    waterConservation: 890,
-    renewableEnergyUsage: 42
-  });
-
-  const [sustainabilityTrends, setSustainabilityTrends] = useState(initialSustainabilityTrends);
-  const [sustainabilityInitiatives, setSustainabilityInitiatives] = useState([
-    {
-      id: 'SI-001',
-      title: 'Biodegradable Packaging Revolution',
-      description: 'Complete transition to fully compostable packaging materials sourced from agricultural waste',
-      status: 'In Progress',
-      progress: 65,
-      startDate: '2024-01-15',
-      targetDate: '2024-12-31',
-      budget: 50000,
-      teamMembers: ['Alice Rodriguez', 'Bob Chen'],
-      risks: ['Supply chain disruption', 'Material compatibility'],
-      category: 'Waste Reduction',
-      expectedImpact: {
-        carbonReduction: 25,
-        wasteElimination: 40,
-        costSavings: 15
-      }
-    },
-    {
-      id: 'SI-002', 
-      title: 'Waste Monetization & Circular Economy',
-      description: 'Convert agricultural and packaging waste into valuable resources through advanced recycling techniques',
-      status: 'Planned',
-      progress: 30,
-      startDate: '2024-03-01',
-      targetDate: '2025-06-30',
-      budget: 75000,
-      teamMembers: ['Charlie Kumar', 'David Patel'],
-      risks: ['Technology adaptation', 'Initial investment'],
-      category: 'Circular Economy',
-      expectedImpact: {
-        carbonReduction: 35,
-        wasteElimination: 55,
-        costSavings: 25
-      }
+  // Load data from localStorage or use initial data
+  const loadData = (key, initialData) => {
+    try {
+      const savedData = localStorage.getItem(key);
+      return savedData ? JSON.parse(savedData) : initialData;
+    } catch (error) {
+      console.error(`Error loading ${key} from localStorage:`, error);
+      return initialData;
     }
-  ]);
+  };
+
+  // Save data to localStorage
+  const saveData = (key, data) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (error) {
+      console.error(`Error saving ${key} to localStorage:`, error);
+    }
+  };
+
+  // Initialize state with localStorage data
+  const [sustainabilityMetrics, setSustainabilityMetrics] = useState(
+    loadData('sustainabilityMetrics', {
+      carbonFootprint: 1245,
+      wasteRecycled: 456,
+      packagingReduction: 38,
+      energyEfficiency: 67,
+      transportEmissions: 210,
+      waterConservation: 890,
+      renewableEnergyUsage: 42,
+      ruralEmployment: 30,
+      localSourcing: 72,
+      communityProjects: 5,
+      avgCarbonReduction: 0
+    })
+  );
+  
+  const [sustainabilityTrends, setSustainabilityTrends] = useState(
+    loadData('sustainabilityTrends', initialSustainabilityTrends)
+  );
+  
+  const [sustainabilityInitiatives, setSustainabilityInitiatives] = useState(
+    loadData('sustainabilityInitiatives', [
+      {
+        id: 'SI-001',
+        title: 'Biodegradable Packaging Revolution',
+        description: 'Transition to compostable packaging materials sourced from agricultural waste, creating rural jobs',
+        status: 'In Progress',
+        progress: 65,
+        startDate: '2024-01-15',
+        targetDate: '2024-12-31',
+        budget: 50000,
+        teamMembers: ['Alice Rodriguez', 'Bob Chen'],
+        risks: ['Supply chain disruption', 'Material compatibility'],
+        category: 'Waste Reduction',
+        ruralImpact: {
+          jobsCreated: 15,
+          farmsSupported: 8,
+          communitiesImpacted: 3
+        },
+        expectedImpact: {
+          carbonReduction: 25,
+          wasteElimination: 40,
+          costSavings: 15,
+          revenueIncrease: 10
+        }
+      },
+      {
+        id: 'SI-002', 
+        title: 'Waste Monetization & Circular Economy',
+        description: 'Convert agricultural waste into valuable resources through advanced recycling, empowering rural economies',
+        status: 'Planned',
+        progress: 30,
+        startDate: '2024-03-01',
+        targetDate: '2025-06-30',
+        budget: 75000,
+        teamMembers: ['Charlie Kumar', 'David Patel'],
+        risks: ['Technology adaptation', 'Initial investment'],
+        category: 'Circular Economy',
+        ruralImpact: {
+          jobsCreated: 25,
+          farmsSupported: 12,
+          communitiesImpacted: 5
+        },
+        expectedImpact: {
+          carbonReduction: 35,
+          wasteElimination: 55,
+          costSavings: 25,
+          revenueIncrease: 18
+        }
+      },
+      {
+        id: 'SI-003',
+        title: 'Rural Solar Microgrid Initiative',
+        description: 'Install renewable energy microgrids in underserved rural communities',
+        status: 'Completed',
+        progress: 100,
+        startDate: '2023-06-01',
+        targetDate: '2023-12-15',
+        budget: 120000,
+        teamMembers: ['Eva Johnson', 'Frank Liu'],
+        risks: ['Regulatory approval', 'Community adoption'],
+        category: 'Energy',
+        ruralImpact: {
+          jobsCreated: 42,
+          farmsSupported: 0,
+          communitiesImpacted: 8
+        },
+        expectedImpact: {
+          carbonReduction: 60,
+          wasteElimination: 5,
+          costSavings: 40,
+          revenueIncrease: 15
+        }
+      }
+    ])
+  );
+
+  // Save data to localStorage whenever it changes
+  useEffect(() => {
+    saveData('sustainabilityMetrics', sustainabilityMetrics);
+  }, [sustainabilityMetrics]);
+
+  useEffect(() => {
+    saveData('sustainabilityTrends', sustainabilityTrends);
+  }, [sustainabilityTrends]);
+
+  useEffect(() => {
+    saveData('sustainabilityInitiatives', sustainabilityInitiatives);
+  }, [sustainabilityInitiatives]);
 
   const [initiativeFilter, setInitiativeFilter] = useState({
     status: 'All',
@@ -118,7 +277,6 @@ function SustainabilityTracker() {
   const [isAddInitiativeOpen, setIsAddInitiativeOpen] = useState(false);
   const [isEditInitiativeOpen, setIsEditInitiativeOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isMetricsChartOpen, setIsMetricsChartOpen] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -133,10 +291,16 @@ function SustainabilityTracker() {
     startDate: '',
     targetDate: '',
     category: '',
+    ruralImpact: {
+      jobsCreated: 0,
+      farmsSupported: 0,
+      communitiesImpacted: 0
+    },
     expectedImpact: {
       carbonReduction: 0,
       wasteElimination: 0,
-      costSavings: 0
+      costSavings: 0,
+      revenueIncrease: 0
     }
   });
   
@@ -151,13 +315,47 @@ function SustainabilityTracker() {
   const [goalProgress, setGoalProgress] = useState([
     { name: 'Carbon Reduction', current: 25, target: 50 },
     { name: 'Waste Recycling', current: 45, target: 80 },
-    { name: 'Renewable Energy', current: 40, target: 100 }
+    { name: 'Renewable Energy', current: 40, target: 100 },
+    { name: 'Rural Employment', current: 30, target: 100 }
   ]);
   
   const COLORS = [
     '#0088FE', '#00C49F', '#FFBB28', '#FF8042', 
     '#8884D8', '#82CA9D', '#A4DE6C', '#D0ED57',
     '#FFC658', '#FF7F50', '#87CEEB', '#DA70D6'
+  ];
+
+  // Comparison data: Traditional vs Sustainable methods
+  const comparisonData = [
+    {
+      category: 'Packaging',
+      traditional: { cost: 100, carbon: 85, ruralImpact: 2 },
+      sustainable: { cost: 90, carbon: 30, ruralImpact: 8 }
+    },
+    {
+      category: 'Energy',
+      traditional: { cost: 120, carbon: 95, ruralImpact: 1 },
+      sustainable: { cost: 80, carbon: 15, ruralImpact: 15 }
+    },
+    {
+      category: 'Waste Mgmt',
+      traditional: { cost: 75, carbon: 65, ruralImpact: 3 },
+      sustainable: { cost: 60, carbon: 20, ruralImpact: 12 }
+    },
+    {
+      category: 'Transport',
+      traditional: { cost: 110, carbon: 90, ruralImpact: 0 },
+      sustainable: { cost: 95, carbon: 40, ruralImpact: 6 }
+    }
+  ];
+
+  // Rural impact metrics
+  const ruralImpactData = [
+    { subject: 'Jobs Created', A: 30, fullMark: 50 },
+    { subject: 'Local Sourcing', A: 72, fullMark: 100 },
+    { subject: 'Farm Support', A: 20, fullMark: 50 },
+    { subject: 'Community Projects', A: 5, fullMark: 10 },
+    { subject: 'Skill Development', A: 15, fullMark: 30 }
   ];
 
   useEffect(() => {
@@ -167,14 +365,24 @@ function SustainabilityTracker() {
           ? (sustainabilityTrends[0].carbon - sustainabilityTrends[sustainabilityTrends.length - 1].carbon) / 
             (sustainabilityTrends.length - 1)
           : 0;
-  
+
+        const totalRuralJobs = sustainabilityInitiatives.reduce(
+          (sum, initiative) => sum + (initiative.ruralImpact?.jobsCreated || 0), 0
+        );
+
+        const totalCommunitiesImpacted = sustainabilityInitiatives.reduce(
+          (sum, initiative) => sum + (initiative.ruralImpact?.communitiesImpacted || 0), 0
+        );
+
         setSustainabilityMetrics(prev => ({
           ...prev,
           carbonFootprint: isNaN(prev.carbonFootprint) ? 0 : prev.carbonFootprint,
           wasteRecycled: isNaN(prev.wasteRecycled) ? 0 : prev.wasteRecycled,
+          ruralEmployment: totalRuralJobs,
+          communityProjects: totalCommunitiesImpacted,
           avgCarbonReduction: isNaN(avgCarbonReduction) ? 0 : Math.abs(avgCarbonReduction.toFixed(1))
         }));
-  
+
         setGoalProgress(prev => prev.map(goal => {
           let currentValue;
           switch(goal.name) {
@@ -186,6 +394,9 @@ function SustainabilityTracker() {
               break;
             case 'Renewable Energy':
               currentValue = sustainabilityMetrics.renewableEnergyUsage;
+              break;
+            case 'Rural Employment':
+              currentValue = totalRuralJobs;
               break;
             default:
               currentValue = goal.current;
@@ -202,7 +413,7 @@ function SustainabilityTracker() {
     };
   
     calculateMetrics();
-  }, [sustainabilityTrends, sustainabilityMetrics.carbonFootprint, sustainabilityMetrics.wasteRecycled, sustainabilityMetrics.renewableEnergyUsage]);
+  }, [sustainabilityTrends, sustainabilityInitiatives]);
 
   const filteredInitiatives = useMemo(() => {
     return sustainabilityInitiatives.filter(initiative => 
@@ -216,7 +427,8 @@ function SustainabilityTracker() {
   const metricsChartData = [
     { name: 'Carbon Footprint', value: sustainabilityMetrics.carbonFootprint },
     { name: 'Waste Recycled', value: sustainabilityMetrics.wasteRecycled },
-    { name: 'Energy Efficiency', value: sustainabilityMetrics.energyEfficiency }
+    { name: 'Energy Efficiency', value: sustainabilityMetrics.energyEfficiency },
+    { name: 'Rural Employment', value: sustainabilityMetrics.ruralEmployment }
   ];
 
   const handleAddInitiative = () => {
@@ -226,14 +438,14 @@ function SustainabilityTracker() {
     }
 
     const newInitiative = {
-      id: `SI-${sustainabilityInitiatives.length + 1}`,
+      id: `SI-${Date.now()}`,
       ...initiativeForm,
       startDate: initiativeForm.startDate || new Date().toISOString().split('T')[0],
       targetDate: initiativeForm.targetDate || 
         new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
     };
 
-    setSustainabilityInitiatives([...sustainabilityInitiatives, newInitiative]);
+    setSustainabilityInitiatives(prev => [...prev, newInitiative]);
     resetInitiativeForm();
     setIsAddInitiativeOpen(false);
   };
@@ -267,10 +479,16 @@ function SustainabilityTracker() {
       startDate: '',
       targetDate: '',
       category: '',
+      ruralImpact: {
+        jobsCreated: 0,
+        farmsSupported: 0,
+        communitiesImpacted: 0
+      },
       expectedImpact: {
         carbonReduction: 0,
         wasteElimination: 0,
-        costSavings: 0
+        costSavings: 0,
+        revenueIncrease: 0
       }
     });
   };
@@ -293,8 +511,11 @@ function SustainabilityTracker() {
       packagingReduction: PackageOpen,
       energyEfficiency: TreePine,
       transportEmissions: Truck,
-      waterConservation: Globe,
-      renewableEnergyUsage: TrendingUp
+      waterConservation: Droplet,
+      renewableEnergyUsage: Sun,
+      ruralEmployment: Users,
+      localSourcing: Home,
+      communityProjects: Heart
     };
     
     return (
@@ -313,7 +534,7 @@ function SustainabilityTracker() {
           
           return (
             <div 
-              key={key} 
+              key={`metric-${key}`}
               className="bg-white rounded-xl shadow-lg p-6 hover:scale-105 transition-transform"
             >
               <div className="flex items-center mb-4">
@@ -323,7 +544,7 @@ function SustainabilityTracker() {
                 </h3>
               </div>
               <div className="text-4xl font-bold text-gray-800">
-                {value} <span className="text-sm">kg</span>
+                {value} <span className="text-sm">{key.includes('carbon') ? 'kg' : key.includes('water') ? 'L' : key.includes('rural') ? 'jobs' : key.includes('community') ? 'projects' : '%'}</span>
               </div>
             </div>
           );
@@ -340,23 +561,23 @@ function SustainabilityTracker() {
         </h2>
         <div className="space-y-4">
           {goalProgress.map((goal, index) => (
-            <div key={index} className="bg-gray-50 p-4 rounded-lg flex items-center">
-              <div className={`mr-4 p-3 rounded-full ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-blue-500' : 'bg-green-500'}`}>
-                {index === 0 ? <Factory /> : index === 1 ? <Recycle /> : <TreePine />}
+            <div key={`goal-${index}`} className="bg-gray-50 p-4 rounded-lg flex items-center">
+              <div className={`mr-4 p-3 rounded-full ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-blue-500' : index === 2 ? 'bg-green-500' : 'bg-purple-500'}`}>
+                {index === 0 ? <Factory /> : index === 1 ? <Recycle /> : index === 2 ? <Sun /> : <Users />}
               </div>
               <div className="flex-grow">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-lg font-medium">{goal.name}</h3>
-                  <span className="text-sm text-gray-600">Target: {goal.target}%</span>
+                  <span className="text-sm text-gray-600">Target: {goal.target}{goal.name === 'Rural Employment' ? ' jobs' : '%'}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                   <div 
-                    className="bg-green-600 h-2.5 rounded-full" 
-                    style={{ width: `${goal.current}%` }}
+                    className={`h-2.5 rounded-full ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-blue-500' : index === 2 ? 'bg-green-500' : 'bg-purple-500'}`} 
+                    style={{ width: `${(goal.current / goal.target) * 100}%` }}
                   ></div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">Current Progress: {goal.current}%</div>
+                  <div className="text-sm text-gray-600">Current: {goal.current}{goal.name === 'Rural Employment' ? ' jobs' : '%'}</div>
                   {goal.current < goal.target ? (
                     <TrendingUp className="text-green-600" size={20} />
                   ) : (
@@ -376,7 +597,7 @@ function SustainabilityTracker() {
       <h3 className="text-xl font-semibold mb-4 flex items-center">
         <TrendingUp className="mr-2 text-blue-600" /> Sustainability Trends
       </h3>
-      {sustainabilityTrends.length > 0 ? (
+      <ChartErrorBoundary>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={sustainabilityTrends}
@@ -390,14 +611,10 @@ function SustainabilityTracker() {
             <Legend />
             <Bar yAxisId="left" dataKey="carbon" name="Carbon Footprint (kg)" fill="#8884d8" />
             <Bar yAxisId="left" dataKey="waste" name="Waste Recycled (kg)" fill="#82ca9d" />
-            <Bar yAxisId="right" dataKey="energy" name="Energy Consumption (kWh)" fill="#ffc658" />
+            <Bar yAxisId="right" dataKey="ruralJobs" name="Rural Jobs Created" fill="#ffc658" />
           </BarChart>
         </ResponsiveContainer>
-      ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
-          No trend data available
-        </div>
-      )}
+      </ChartErrorBoundary>
     </div>
   );
 
@@ -416,16 +633,16 @@ function SustainabilityTracker() {
         trend: sustainabilityMetrics.wasteRecycled > 500 ? 'improving' : 'needs work'
       },
       { 
-        name: 'Cost Savings', 
-        value: sustainabilityInitiatives.reduce((sum, init) => sum + init.expectedImpact.costSavings, 0),
-        icon: <TrendingUp className="text-purple-500" />,
-        trend: 'improving'
+        name: 'Rural Jobs', 
+        value: sustainabilityMetrics.ruralEmployment,
+        icon: <Users className="text-purple-500" />,
+        trend: sustainabilityMetrics.ruralEmployment > 25 ? 'improving' : 'needs work'
       },
       { 
-        name: 'Energy Impact', 
-        value: sustainabilityMetrics.energyEfficiency,
-        icon: <TreePine className="text-yellow-500" />,
-        trend: sustainabilityMetrics.energyEfficiency > 65 ? 'good' : 'needs work'
+        name: 'Cost Savings', 
+        value: sustainabilityInitiatives.reduce((sum, init) => sum + init.expectedImpact.costSavings, 0),
+        icon: <DollarSign className="text-yellow-500" />,
+        trend: 'improving'
       }
     ];
   
@@ -438,7 +655,7 @@ function SustainabilityTracker() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
             {impactData.map((metric, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={`impact-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <div className="p-2 mr-3 rounded-full bg-white shadow-sm">
                     {metric.icon}
@@ -452,130 +669,174 @@ function SustainabilityTracker() {
                   </div>
                 </div>
                 <div className="text-xl font-bold" style={{ color: COLORS[index % COLORS.length] }}>
-                  {metric.value}%
+                  {metric.value}{metric.name === 'Rural Jobs' ? '' : '%'}
                 </div>
               </div>
             ))}
           </div>
           
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={impactDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {impactDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <ChartErrorBoundary>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={impactDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {impactDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartErrorBoundary>
           </div>
         </div>
         
         <div className="mt-6">
           <h4 className="font-medium mb-3">Impact by Initiative</h4>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={sustainabilityInitiatives}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="title" type="category" width={100} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="expectedImpact.carbonReduction" name="Carbon Reduction" fill="#0088FE" />
-                <Bar dataKey="expectedImpact.wasteElimination" name="Waste Elimination" fill="#00C49F" />
-                <Bar dataKey="expectedImpact.costSavings" name="Cost Savings" fill="#FFBB28" />
-              </BarChart>
-            </ResponsiveContainer>
+            <ChartErrorBoundary>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={sustainabilityInitiatives}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="title" type="category" width={100} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="expectedImpact.carbonReduction" name="Carbon Reduction (%)" fill="#0088FE" />
+                  <Bar dataKey="expectedImpact.costSavings" name="Cost Savings (%)" fill="#FFBB28" />
+                  <Bar dataKey="ruralImpact.jobsCreated" name="Rural Jobs" fill="#8884D8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartErrorBoundary>
           </div>
         </div>
       </div>
     );
   };
 
-  const renderGoalProgressChart = () => (
+  const renderComparisonChart = () => (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h3 className="text-xl font-semibold mb-4 flex items-center">
-        <TargetIcon className="mr-2 text-purple-600" /> Goal Progress
+        <BarChart2 className="mr-2 text-blue-600" /> Traditional vs Sustainable Methods
       </h3>
-      {goalProgress.length > 0 ? (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={goalProgress}
-            layout="vertical"
-            margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" domain={[0, 100]} />
-            <YAxis dataKey="name" type="category" />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="current" name="Current Progress" fill="#8884d8" />
-            <Bar dataKey="target" name="Target" fill="#82ca9d" />
-          </BarChart>
-        </ResponsiveContainer>
-      ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
-          No goal progress data available
-        </div>
-      )}
+      <div className="h-64">
+        <ChartErrorBoundary>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={comparisonData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="traditional.cost" name="Traditional Cost" fill="#8884d8" />
+              <Bar dataKey="sustainable.cost" name="Sustainable Cost" fill="#82ca9d" />
+              <Bar dataKey="traditional.ruralImpact" name="Traditional Rural Impact" fill="#ffc658" />
+              <Bar dataKey="sustainable.ruralImpact" name="Sustainable Rural Impact" fill="#ff8042" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartErrorBoundary>
+      </div>
+      <div className="mt-4 text-sm text-gray-600">
+        <p><span className="font-semibold">Key Insight:</span> Sustainable methods show lower costs, reduced carbon footprint, 
+        and significantly higher rural economic impact compared to traditional approaches.</p>
+      </div>
     </div>
   );
 
-  const renderCombinedEffect = () => (
+  const renderRuralImpactRadar = () => (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h3 className="text-xl font-semibold mb-4 flex items-center">
-        <Globe className="mr-2 text-blue-600" /> Combined Sustainability Impact
+        <Home className="mr-2 text-green-600" /> Rural Community Impact
       </h3>
-      {sustainabilityTrends.length > 0 ? (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={sustainabilityTrends}
-            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="carbon" name="Carbon Footprint (kg)" fill="#8884d8" />
-            <Bar dataKey="waste" name="Waste Recycled (kg)" fill="#82ca9d" />
-            <Line 
-              type="monotone" 
-              dataKey="energy" 
-              name="Energy Efficiency (%)" 
-              stroke="#ff8042"
-              activeDot={{ r: 8 }}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
-          No combined data available
-        </div>
-      )}
+      <div className="h-64">
+        <ChartErrorBoundary>
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={ruralImpactData}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="subject" />
+              <PolarRadiusAxis angle={30} domain={[0, 'dataMax + 10']} />
+              <Radar 
+                name="Current Impact" 
+                dataKey="A" 
+                stroke="#8884d8" 
+                fill="#8884d8" 
+                fillOpacity={0.6} 
+              />
+              <Tooltip />
+              <Legend />
+            </RadarChart>
+          </ResponsiveContainer>
+        </ChartErrorBoundary>
+      </div>
+      <div className="mt-4 text-sm text-gray-600">
+        <p><span className="font-semibold">Why This Matters:</span> Our sustainable initiatives create meaningful rural employment, 
+        support local agriculture, and build resilient communities while reducing environmental impact.</p>
+      </div>
     </div>
   );
+
+  const renderProfitSocialChart = () => {
+    const profitSocialData = sustainabilityInitiatives.map(initiative => ({
+      name: initiative.title,
+      socialImpact: initiative.ruralImpact.jobsCreated * 2 + 
+                   initiative.ruralImpact.communitiesImpacted * 5,
+      profitImpact: initiative.expectedImpact.costSavings + 
+                   initiative.expectedImpact.revenueIncrease,
+      budget: initiative.budget / 1000
+    }));
+
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold mb-4 flex items-center">
+          <DollarSign className="mr-2 text-green-600" /> Profit & Social Impact
+        </h3>
+        <div className="h-64">
+          <ChartErrorBoundary>
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart
+                margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+              >
+                <CartesianGrid />
+                <XAxis type="number" dataKey="profitImpact" name="Profit Impact (%)" />
+                <YAxis type="number" dataKey="socialImpact" name="Social Impact (score)" />
+                <ZAxis type="number" dataKey="budget" range={[60, 400]} name="Budget ($k)" />
+                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                <Legend />
+                <Scatter name="Initiatives" data={profitSocialData} fill="#8884d8" />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </ChartErrorBoundary>
+        </div>
+        <div className="mt-4 text-sm text-gray-600">
+          <p><span className="font-semibold">The Win-Win:</span> This visualization demonstrates how our sustainability initiatives 
+          simultaneously drive profitability (through cost savings and revenue) while creating positive social impact in rural communities.</p>
+        </div>
+      </div>
+    );
+  };
 
   const renderInitiativesGrid = () => (
     <div className="grid md:grid-cols-2 gap-6">
       {filteredInitiatives.map((initiative) => (
         <motion.div
-          key={initiative.id}
+          key={`initiative-${initiative.id}`}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
@@ -598,6 +859,14 @@ function SustainabilityTracker() {
             </span>
           </div>
           <p className="text-gray-600 mb-4 line-clamp-2">{initiative.description}</p>
+          
+          <div className="flex items-center mb-2 text-sm">
+            <Users className="mr-1 text-purple-600" size={16} />
+            <span className="mr-4">{initiative.ruralImpact.jobsCreated} rural jobs</span>
+            <DollarSign className="mr-1 text-green-600" size={16} />
+            <span>${initiative.budget.toLocaleString()}</span>
+          </div>
+          
           <div className="flex justify-between items-center">
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
@@ -630,79 +899,6 @@ function SustainabilityTracker() {
         </motion.div>
       ))}
     </div>
-  );
-
-  const renderInitiativesList = () => (
-    <table className="w-full bg-white rounded-xl shadow-lg">
-      <thead>
-        <tr className="bg-gray-100">
-          <th className="p-3 text-left">Title</th>
-          <th className="p-3 text-left">Description</th>
-          <th className="p-3 text-center">Status</th>
-          <th className="p-3 text-center">Progress</th>
-          <th className="p-3 text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredInitiatives.map((initiative) => (
-          <tr 
-            key={initiative.id} 
-            className="border-b hover:bg-gray-50 transition-colors"
-            onClick={() => openDetailModal(initiative)}
-          >
-            <td className="p-3">{initiative.title}</td>
-            <td className="p-3 text-gray-600 line-clamp-1">{initiative.description}</td>
-            <td className="p-3 text-center">
-              <span 
-                className={`
-                  px-2 py-1 rounded-full text-xs
-                  ${initiative.status === 'In Progress' 
-                    ? 'bg-yellow-100 text-yellow-800' 
-                    : initiative.status === 'Completed' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-blue-100 text-blue-800'}
-                `}
-              >
-                {initiative.status}
-              </span>
-            </td>
-            <td className="p-3 text-center">
-              <div className="flex items-center justify-center">
-                <div className="w-24 bg-gray-200 rounded-full h-2.5 mr-2">
-                  <div 
-                    className="bg-green-600 h-2.5 rounded-full" 
-                    style={{ width: `${initiative.progress}%` }}
-                  ></div>
-                </div>
-                <span>{initiative.progress}%</span>
-              </div>
-            </td>
-            <td className="p-3 text-center">
-              <div className="flex justify-center space-x-2">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEditModal(initiative);
-                  }}
-                  className="text-blue-600 hover:bg-blue-50 p-2 rounded-full"
-                >
-                  <Edit size={18} />
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteInitiative(initiative.id);
-                  }}
-                  className="text-red-600 hover:bg-red-50 p-2 rounded-full"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 
   const renderInitiativeDetailModal = () => {
@@ -790,6 +986,28 @@ function SustainabilityTracker() {
                       </div>
                     </div>
                   </div>
+                  
+                  <h3 className="font-semibold mb-2 mt-4">Rural Impact</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-yellow-50 p-2 rounded">
+                      <h4 className="text-xs font-medium">Jobs Created</h4>
+                      <div className="text-lg font-bold text-yellow-700">
+                        {selectedInitiative.ruralImpact.jobsCreated}
+                      </div>
+                    </div>
+                    <div className="bg-orange-50 p-2 rounded">
+                      <h4 className="text-xs font-medium">Farms Supported</h4>
+                      <div className="text-lg font-bold text-orange-700">
+                        {selectedInitiative.ruralImpact.farmsSupported}
+                      </div>
+                    </div>
+                    <div className="bg-red-50 p-2 rounded">
+                      <h4 className="text-xs font-medium">Communities</h4>
+                      <div className="text-lg font-bold text-red-700">
+                        {selectedInitiative.ruralImpact.communitiesImpacted}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -809,9 +1027,9 @@ function SustainabilityTracker() {
                   </p>
 
                   <h3 className="font-semibold mb-2">Team Members</h3>
-                  <div className="flex space-x-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {selectedInitiative.teamMembers.map((member, index) => (
-                      <span key={index} className="bg-gray-200 px-2 py-1 rounded-full text-sm">
+                      <span key={`member-${index}`} className="bg-gray-200 px-2 py-1 rounded-full text-sm">
                         {member}
                       </span>
                     ))}
@@ -820,7 +1038,7 @@ function SustainabilityTracker() {
                   <h3 className="font-semibold mb-2">Risks</h3>
                   <ul className="list-disc pl-5 text-red-600">
                     {selectedInitiative.risks.map((risk, index) => (
-                      <li key={index}>{risk}</li>
+                      <li key={`risk-${index}`}>{risk}</li>
                     ))}
                   </ul>
                 </div>
@@ -840,6 +1058,7 @@ function SustainabilityTracker() {
       </AnimatePresence>
     );
   };
+
   const renderInitiativeModal = () => {
     const isEditing = isEditInitiativeOpen;
     return (
@@ -893,6 +1112,7 @@ function SustainabilityTracker() {
                   <option value="Waste Reduction">Waste Reduction</option>
                   <option value="Circular Economy">Circular Economy</option>
                   <option value="Energy Efficiency">Energy Efficiency</option>
+                  <option value="Rural Development">Rural Development</option>
                 </select>
                 <div className="col-span-2 flex items-center">
                   <input
@@ -924,23 +1144,48 @@ function SustainabilityTracker() {
                   onChange={(e) => setInitiativeForm({...initiativeForm, targetDate: e.target.value})}
                   className="p-2 border rounded-lg"
                 />
-                <div className="col-span-2 grid grid-cols-3 gap-2 text-xs">
-                  {['carbonReduction', 'wasteElimination', 'costSavings'].map((key, idx) => (
-                    <div key={idx}>
-                      <label className="block mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')} (%)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={initiativeForm.expectedImpact[key]}
-                        onChange={(e) => setInitiativeForm({
-                          ...initiativeForm,
-                          expectedImpact: { ...initiativeForm.expectedImpact, [key]: parseInt(e.target.value) },
-                        })}
-                        className="w-full p-1 border rounded"
-                      />
-                    </div>
-                  ))}
+                
+                <div className="col-span-2">
+                  <h4 className="font-medium mb-2">Rural Impact</h4>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    {['jobsCreated', 'farmsSupported', 'communitiesImpacted'].map((key, idx) => (
+                      <div key={`rural-${idx}`}>
+                        <label className="block mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={initiativeForm.ruralImpact[key]}
+                          onChange={(e) => setInitiativeForm({
+                            ...initiativeForm,
+                            ruralImpact: { ...initiativeForm.ruralImpact, [key]: parseInt(e.target.value) },
+                          })}
+                          className="w-full p-1 border rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="col-span-2">
+                  <h4 className="font-medium mb-2">Expected Impact</h4>
+                  <div className="grid grid-cols-4 gap-2 text-xs">
+                    {['carbonReduction', 'wasteElimination', 'costSavings', 'revenueIncrease'].map((key, idx) => (
+                      <div key={`impact-${idx}`}>
+                        <label className="block mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')} (%)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={initiativeForm.expectedImpact[key]}
+                          onChange={(e) => setInitiativeForm({
+                            ...initiativeForm,
+                            expectedImpact: { ...initiativeForm.expectedImpact, [key]: parseInt(e.target.value) },
+                          })}
+                          className="w-full p-1 border rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end mt-4 space-x-4">
@@ -967,47 +1212,6 @@ function SustainabilityTracker() {
       </AnimatePresence>
     );
   };
-  
-
-  const renderMetricsChartModal = () => (
-    <AnimatePresence>
-      {isMetricsChartOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        >
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0.9 }}
-            className="bg-white rounded-xl p-8 w-full max-w-3xl"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Sustainability Metrics Overview</h2>
-              <button 
-                onClick={() => setIsMetricsChartOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={metricsChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 
   return (
     <motion.div 
@@ -1018,9 +1222,14 @@ function SustainabilityTracker() {
     >
       <div className="container mx-auto mt-20">
         <header className="mb-8 flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center">
-            <Leaf className="mr-4 text-green-600" /> Sustainability Dashboard
-          </h1>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-800 flex items-center">
+              <Leaf className="mr-4 text-green-600" /> Sustainability Dashboard
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Merging environmental responsibility with rural economic development
+            </p>
+          </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -1034,6 +1243,51 @@ function SustainabilityTracker() {
           </motion.button>
         </header>
 
+        {/* Key Benefits Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4 flex items-center">
+            <Award className="mr-3 text-yellow-600" /> Why Our Approach Works Better
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="flex items-center mb-2">
+                <Shield className="text-green-600 mr-2" />
+                <h3 className="font-semibold">For Rural Communities</h3>
+              </div>
+              <ul className="list-disc pl-5 text-sm text-gray-700">
+                <li>Creates meaningful local employment opportunities</li>
+                <li>Supports small farmers and producers</li>
+                <li>Develops sustainable infrastructure</li>
+                <li>Reduces urban migration pressures</li>
+              </ul>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-center mb-2">
+                <DollarSign className="text-blue-600 mr-2" />
+                <h3 className="font-semibold">For Business Profitability</h3>
+              </div>
+              <ul className="list-disc pl-5 text-sm text-gray-700">
+                <li>Reduces operational costs long-term</li>
+                <li>Creates new revenue streams from waste</li>
+                <li>Enhances brand value and customer loyalty</li>
+                <li>Future-proofs against regulatory changes</li>
+              </ul>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="flex items-center mb-2">
+                <Globe className="text-purple-600 mr-2" />
+                <h3 className="font-semibold">For The Environment</h3>
+              </div>
+              <ul className="list-disc pl-5 text-sm text-gray-700">
+                <li>Significantly reduces carbon footprint</li>
+                <li>Minimizes waste through circular economy</li>
+                <li>Promotes renewable energy adoption</li>
+                <li>Protects biodiversity and ecosystems</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* System Overview Cards */}
         {renderSustainabilityMetrics()}
 
@@ -1045,9 +1299,9 @@ function SustainabilityTracker() {
           className="grid md:grid-cols-2 gap-8 mb-8"
         >
           {renderTrendAnalysis()}
-          {renderImpactDistribution()}
-          {renderGoalProgressChart()}
-          {renderCombinedEffect()}
+          {renderRuralImpactRadar()}
+          {renderComparisonChart()}
+          {renderProfitSocialChart()}
         </motion.div>
 
         {/* Goals and Impact Section */}
@@ -1108,7 +1362,6 @@ function SustainabilityTracker() {
         {/* Modals */}
         {renderInitiativeDetailModal()}
         {renderInitiativeModal()}
-        {renderMetricsChartModal()}
       </div>
     </motion.div>
   );

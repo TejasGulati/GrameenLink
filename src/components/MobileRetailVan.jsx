@@ -20,12 +20,18 @@ import {
   Info,
   Target,
   Award,
-  Crosshair
+  Crosshair,
+  Heart,
+  Leaf,
+  Book,
+  Banknote,
+  Shield,
+  Smile
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  PieChart, Pie, Cell, ResponsiveContainer 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 
 // Enhanced Product Categories with more specific descriptions
@@ -33,29 +39,47 @@ const PRODUCT_CATEGORIES = [
   { 
     name: 'Agricultural Inputs', 
     description: 'Seeds, fertilizers, tools, and technology to improve farming productivity',
-    icon: Target
+    icon: Leaf,
+    impact: 'Increases crop yields by 30-50% for small farmers'
   },
   { 
     name: 'Health & Wellness', 
     description: 'Essential medicines, health supplements, and personal care products',
-    icon: Crosshair
+    icon: Heart,
+    impact: 'Reduces healthcare access time from days to hours'
   },
   { 
     name: 'FMCG & Essentials', 
     description: 'Fast-moving consumer goods, groceries, and daily household necessities',
-    icon: Award
+    icon: ShoppingCart,
+    impact: 'Saves 4-6 hours weekly per household in procurement time'
   },
   { 
     name: 'Rural Financial Services', 
     description: 'Micro-banking, insurance, and financial literacy tools',
-    icon: ShoppingCart
+    icon: Banknote,
+    impact: 'Increases savings participation by 65% in served communities'
   },
   { 
     name: 'Educational Resources', 
     description: 'Learning materials, digital education tools, and skill development kits',
-    icon: Users
+    icon: Book,
+    impact: 'Improves school attendance by 40% in served areas'
   }
 ];
+
+// Impact comparison data
+const IMPACT_COMPARISON = [
+  { name: 'Access Time', traditional: 8, mrv: 1, fullMark: 10 },
+  { name: 'Product Variety', traditional: 3, mrv: 8, fullMark: 10 },
+  { name: 'Affordability', traditional: 4, mrv: 7, fullMark: 10 },
+  { name: 'Income Impact', traditional: 2, mrv: 9, fullMark: 10 },
+  { name: 'Health Access', traditional: 3, mrv: 8, fullMark: 10 },
+  { name: 'Digital Inclusion', traditional: 1, mrv: 7, fullMark: 10 }
+];
+
+// Key for localStorage
+const LOCAL_STORAGE_KEY = 'mobileRetailVansData';
 
 function MobileRetailVan() {
   const [selectedVan, setSelectedVan] = useState(null);
@@ -65,22 +89,27 @@ function MobileRetailVan() {
     activeVans: 0,
     entrepreneursEmpowered: 0,
     villagesReached: 0,
-    totalSocialImpact: 0
+    totalSocialImpact: 0,
+    incomeGenerated: 0,
+    farmersTrained: 0
   });
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateVanModalOpen, setIsCreateVanModalOpen] = useState(false);
   const [isVanDetailsModalOpen, setIsVanDetailsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isImpactModalOpen, setIsImpactModalOpen] = useState(false);
   const [productDistributionData, setProductDistributionData] = useState([]);
-const [performanceChartData, setPerformanceChartData] = useState([]);
-const [socialImpactData, setSocialImpactData] = useState([]);
-const [revenueData, setRevenueData] = useState([]);
+  const [performanceChartData, setPerformanceChartData] = useState([]);
+  const [socialImpactData, setSocialImpactData] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [benefitsData, setBenefitsData] = useState([]);
 
-// Colors for charts
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+  // Colors for charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-  const [mobileVans, setMobileVans] = useState([
+  // Initial mock data
+  const initialMockVans = [
     {
       id: 'MRV-001',
       entrepreneur: 'Priya Sharma',
@@ -90,7 +119,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
       socialImpact: {
         farmersTrained: 42,
         additionalIncomeFacilitated: '₹75,000',
-        sustainabilityScore: 4.7
+        sustainabilityScore: 4.7,
+        healthAccess: 38,
+        educationAccess: 24
       },
       route: [
         { point: 'Farmer Cooperative', timestamp: '09:00 AM', services: ['Agricultural Inputs', 'Financial Literacy'] },
@@ -109,7 +140,15 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
         salesThisMonth: '₹95,000',
         customerSatisfaction: 4.8,
         routesCovered: 15,
-        productsDelivered: 127
+        productsDelivered: 127,
+        profitMargin: '32%',
+        customerRetention: '85%'
+      },
+      benefits: {
+        timeSaved: '150 hours/week',
+        costReduction: '25% avg.',
+        accessImproved: '3x more products',
+        digitalPayments: '68% adoption'
       }
     },
     {
@@ -121,7 +160,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
       socialImpact: {
         farmersTrained: 35,
         additionalIncomeFacilitated: '₹62,000',
-        sustainabilityScore: 4.5
+        sustainabilityScore: 4.5,
+        healthAccess: 42,
+        educationAccess: 31
       },
       route: [
         { point: 'Rural Health Clinic', timestamp: '10:15 AM', services: ['Health & Wellness', 'Educational Resources'] },
@@ -139,10 +180,24 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
         salesThisMonth: '₹75,000',
         customerSatisfaction: 4.5,
         routesCovered: 12,
-        productsDelivered: 95
+        productsDelivered: 95,
+        profitMargin: '28%',
+        customerRetention: '78%'
+      },
+      benefits: {
+        timeSaved: '120 hours/week',
+        costReduction: '22% avg.',
+        accessImproved: '2.5x more products',
+        digitalPayments: '55% adoption'
       }
     }
-  ]);
+  ];
+
+  // Load data from localStorage or use initial mock data
+  const [mobileVans, setMobileVans] = useState(() => {
+    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return savedData ? JSON.parse(savedData) : initialMockVans;
+  });
 
   const [newVan, setNewVan] = useState({
     entrepreneurName: '',
@@ -154,17 +209,27 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
     registrationNumber: ''
   });
 
+  // Save to localStorage whenever mobileVans changes
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mobileVans));
+  }, [mobileVans]);
+
   useEffect(() => {
     // Calculate system-wide statistics
     const updatedSystemStats = {
       totalVans: mobileVans.length,
       activeVans: mobileVans.filter(van => van.status === 'Active').length,
-      entrepreneursEmpowered: mobileVans.length, // Assuming each van represents a unique entrepreneur
-      villagesReached: mobileVans.length * 5, // Assuming each van reaches 5 villages
+      entrepreneursEmpowered: mobileVans.length,
+      villagesReached: mobileVans.length * 5,
       totalSocialImpact: mobileVans.reduce((sum, van) => {
         const impact = parseFloat(van.socialImpact.additionalIncomeFacilitated.replace('₹', '').replace(',', ''));
         return sum + (isNaN(impact) ? 0 : impact);
-      }, 0)
+      }, 0),
+      incomeGenerated: mobileVans.reduce((sum, van) => {
+        const income = parseFloat(van.socialImpact.additionalIncomeFacilitated.replace('₹', '').replace(',', ''));
+        return sum + (isNaN(income) ? 0 : income);
+      }, 0),
+      farmersTrained: mobileVans.reduce((sum, van) => sum + van.socialImpact.farmersTrained, 0)
     };
   
     setSystemStats(updatedSystemStats);
@@ -183,21 +248,24 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
       Object.entries(productDist).map(([name, value]) => ({
         name,
         value,
-        percent: mobileVans.length ? value / mobileVans.length : 0
+        percent: mobileVans.length ? value / mobileVans.length : 0,
+        ...PRODUCT_CATEGORIES.find(cat => cat.name === name)
       }))
     );
   
     // Calculate performance chart data
     setPerformanceChartData(mobileVans.map(van => {
       const sales = parseFloat(van.performanceMetrics.salesThisMonth.replace('₹', '').replace(',', ''));
-      const satisfaction = van.performanceMetrics.customerSatisfaction * 20; // Convert to percentage
+      const satisfaction = van.performanceMetrics.customerSatisfaction * 20;
       const products = van.performanceMetrics.productsDelivered;
+      const profit = parseFloat(van.performanceMetrics.profitMargin.replace('%', ''));
   
       return {
         name: van.id,
         sales: isNaN(sales) ? 0 : sales,
         satisfaction: isNaN(satisfaction) ? 0 : satisfaction,
-        products: isNaN(products) ? 0 : products
+        products: isNaN(products) ? 0 : products,
+        profit: isNaN(profit) ? 0 : profit
       };
     }));
   
@@ -205,22 +273,30 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
     setSocialImpactData([
       { 
         name: 'Farmers Trained', 
-        value: mobileVans.reduce((sum, van) => sum + (isNaN(van.socialImpact.farmersTrained) ? 0 : van.socialImpact.farmersTrained), 0) 
+        value: mobileVans.reduce((sum, van) => sum + van.socialImpact.farmersTrained, 0),
+        icon: Leaf
       },
       { 
         name: 'Income Generated', 
         value: mobileVans.reduce((sum, van) => {
           const income = parseFloat(van.socialImpact.additionalIncomeFacilitated.replace('₹', '').replace(',', ''));
           return sum + (isNaN(income) ? 0 : income);
-        }, 0) 
+        }, 0),
+        icon: Banknote
       },
       { 
-        name: 'Villages Reached', 
-        value: mobileVans.length ? mobileVans.length * 5 : 0 // Assuming each van reaches 5 villages
+        name: 'Health Access', 
+        value: mobileVans.reduce((sum, van) => sum + van.socialImpact.healthAccess, 0),
+        icon: Heart
+      },
+      { 
+        name: 'Education Access', 
+        value: mobileVans.reduce((sum, van) => sum + van.socialImpact.educationAccess, 0),
+        icon: Book
       }
     ]);
   
-    // Calculate revenue data
+    // Calculate revenue vs impact data
     setRevenueData(mobileVans.map(van => {
       const revenue = parseFloat(van.performanceMetrics.salesThisMonth.replace('₹', '').replace(',', ''));
       const impact = parseFloat(van.socialImpact.additionalIncomeFacilitated.replace('₹', '').replace(',', ''));
@@ -228,10 +304,18 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
       return {
         name: van.id,
         revenue: isNaN(revenue) ? 0 : revenue,
-        impact: isNaN(impact) ? 0 : impact
+        impact: isNaN(impact) ? 0 : impact,
+        profit: parseFloat(van.performanceMetrics.profitMargin.replace('%', '')) || 0
       };
     }));
-  
+
+    // Calculate benefits data
+    setBenefitsData([
+      { name: 'Time Saved', value: mobileVans.reduce((sum, van) => sum + parseInt(van.benefits.timeSaved), 0) },
+      { name: 'Cost Reduction', value: mobileVans.reduce((sum, van) => sum + parseInt(van.benefits.costReduction), 0) },
+      { name: 'Product Access', value: mobileVans.reduce((sum, van) => sum + parseFloat(van.benefits.accessImproved), 0) },
+      { name: 'Digital Inclusion', value: mobileVans.reduce((sum, van) => sum + parseInt(van.benefits.digitalPayments), 0) }
+    ]);
   }, [mobileVans]);
   
   const filteredVans = useMemo(() => {
@@ -251,22 +335,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
     return result;
   }, [mobileVans, filter, searchTerm]);
 
-  useEffect(() => {
-    // Calculate system-wide statistics
-    const updatedSystemStats = {
-      totalVans: mobileVans.length,
-      activeVans: mobileVans.filter(van => van.status === 'Active').length,
-      entrepreneursEmpowered: mobileVans.length, // Assuming each van represents a unique entrepreneur
-      villagesReached: mobileVans.length * 5, // Assuming each van reaches 5 villages
-      totalSocialImpact: mobileVans.reduce((sum, van) => {
-        const impact = parseFloat(van.socialImpact.additionalIncomeFacilitated.replace('₹', '').replace(',', ''));
-        return sum + (isNaN(impact) ? 0 : impact);
-      }, 0)
-    };
-  
-    setSystemStats(updatedSystemStats);
-  }, [mobileVans]);
-
   const handleCreateVan = () => {
     if (!newVan.entrepreneurName || !newVan.location || !newVan.contactNumber) {
       alert('Please fill in all required fields');
@@ -281,8 +349,10 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
       mission: newVan.mission || 'Empowering Rural Communities',
       socialImpact: {
         farmersTrained: Math.floor(Math.random() * 50),
-        additionalIncomeFacilitated: `₹${(Math.floor(Math.random() * 50000)).toLocaleString()}`,
-        sustainabilityScore: +(Math.random() * 5).toFixed(1)
+        additionalIncomeFacilitated: `₹${(Math.floor(Math.random() * 50000) + 50000)}`,
+        sustainabilityScore: +(Math.random() * 5).toFixed(1),
+        healthAccess: Math.floor(Math.random() * 50),
+        educationAccess: Math.floor(Math.random() * 40)
       },
       route: [{ point: newVan.location, timestamp: new Date().toLocaleTimeString(), services: newVan.specialties }],
       specialties: newVan.specialties,
@@ -294,10 +364,18 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
         lastMaintenance: new Date().toISOString().split('T')[0]
       },
       performanceMetrics: {
-        salesThisMonth: `₹${(Math.floor(Math.random() * 50000)).toLocaleString()}`,
+        salesThisMonth: `₹${(Math.floor(Math.random() * 50000) + 50000)}`,
         customerSatisfaction: +(Math.random() * 5).toFixed(1),
-        routesCovered: Math.floor(Math.random() * 15),
-        productsDelivered: Math.floor(Math.random() * 100)
+        routesCovered: Math.floor(Math.random() * 15) + 5,
+        productsDelivered: Math.floor(Math.random() * 100) + 50,
+        profitMargin: `${Math.floor(Math.random() * 15) + 20}%`,
+        customerRetention: `${Math.floor(Math.random() * 20) + 70}%`
+      },
+      benefits: {
+        timeSaved: `${Math.floor(Math.random() * 100) + 50} hours/week`,
+        costReduction: `${Math.floor(Math.random() * 15) + 15}% avg.`,
+        accessImproved: `${(Math.random() * 3 + 2).toFixed(1)}x more products`,
+        digitalPayments: `${Math.floor(Math.random() * 30) + 50}% adoption`
       }
     };
 
@@ -376,7 +454,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
               <div className="space-y-3">
                 <div><strong>Farmers Trained:</strong> {selectedVan.socialImpact.farmersTrained}</div>
                 <div><strong>Additional Income:</strong> {selectedVan.socialImpact.additionalIncomeFacilitated}</div>
-                <div><strong>Sustainability Score:</strong> {selectedVan.socialImpact.sustainabilityScore}/5</div>
+                <div><strong>Health Services Provided:</strong> {selectedVan.socialImpact.healthAccess}</div>
+                <div><strong>Educational Services:</strong> {selectedVan.socialImpact.educationAccess}</div>
               </div>
             </div>
 
@@ -385,9 +464,44 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
               <h3 className="text-xl font-semibold mb-4 text-purple-800">Performance</h3>
               <div className="space-y-3">
                 <div><strong>Monthly Sales:</strong> {selectedVan.performanceMetrics.salesThisMonth}</div>
+                <div><strong>Profit Margin:</strong> {selectedVan.performanceMetrics.profitMargin}</div>
                 <div><strong>Customer Satisfaction:</strong> {selectedVan.performanceMetrics.customerSatisfaction}/5</div>
-                <div><strong>Routes Covered:</strong> {selectedVan.performanceMetrics.routesCovered}</div>
-                <div><strong>Products Delivered:</strong> {selectedVan.performanceMetrics.productsDelivered}</div>
+                <div><strong>Customer Retention:</strong> {selectedVan.performanceMetrics.customerRetention}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Benefits Section */}
+          <div className="mt-8 bg-yellow-50 rounded-xl p-6">
+            <h3 className="text-xl font-semibold mb-4 text-yellow-800">Community Benefits</h3>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-2">
+                  <RefreshCw className="text-blue-600 mr-2" size={18} />
+                  <strong>Time Saved</strong>
+                </div>
+                <div>{selectedVan.benefits.timeSaved}</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-2">
+                  <Banknote className="text-green-600 mr-2" size={18} />
+                  <strong>Cost Reduction</strong>
+                </div>
+                <div>{selectedVan.benefits.costReduction}</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-2">
+                  <Package className="text-purple-600 mr-2" size={18} />
+                  <strong>Product Access</strong>
+                </div>
+                <div>{selectedVan.benefits.accessImproved}</div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-2">
+                  <Globe className="text-teal-600 mr-2" size={18} />
+                  <strong>Digital Inclusion</strong>
+                </div>
+                <div>{selectedVan.benefits.digitalPayments}</div>
               </div>
             </div>
           </div>
@@ -473,7 +587,14 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
             <div className="space-y-2">
               <div><strong>Location:</strong> {van.location}</div>
               <div><strong>Mission:</strong> {van.mission}</div>
-              <div><strong>Social Impact:</strong> {van.socialImpact.additionalIncomeFacilitated}</div>
+              <div className="flex items-center">
+                <Banknote className="mr-2 text-green-600" size={16} />
+                <strong>Impact:</strong> {van.socialImpact.additionalIncomeFacilitated}
+              </div>
+              <div className="flex items-center">
+                <Smile className="mr-2 text-blue-600" size={16} />
+                <strong>Satisfaction:</strong> {van.performanceMetrics.customerSatisfaction}/5
+              </div>
               <div className="flex justify-between items-center mt-4">
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div 
@@ -496,8 +617,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
             <th className="p-4 text-left">Entrepreneur</th>
             <th className="p-4 text-left">Location</th>
             <th className="p-4 text-left">Status</th>
-            <th className="p-4 text-left">Mission</th>
-            <th className="p-4 text-left">Social Impact</th>
+            <th className="p-4 text-left">Impact</th>
+            <th className="p-4 text-left">Revenue</th>
             <th className="p-4 text-left">Actions</th>
           </tr>
         </thead>
@@ -525,8 +646,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
                   {van.status}
                 </span>
               </td>
-              <td className="p-4">{van.mission}</td>
               <td className="p-4">{van.socialImpact.additionalIncomeFacilitated}</td>
+              <td className="p-4">{van.performanceMetrics.salesThisMonth}</td>
               <td className="p-4 flex space-x-2">
                 <button 
                   onClick={(e) => {
@@ -554,6 +675,112 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
     );
   };
 
+  const renderImpactComparisonModal = () => (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <motion.div
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.9 }}
+        className="bg-white rounded-xl p-12 w-full max-w-4xl"
+      >
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800 flex items-center">
+              <Info className="mr-4 text-blue-600" /> 
+              Why Mobile Retail Vans?
+            </h2>
+            <p className="text-xl text-gray-600 mt-2">Transforming rural economies through innovative distribution</p>
+          </div>
+          <button 
+            onClick={() => setIsImpactModalOpen(false)}
+            className="text-gray-500 hover:text-gray-800"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-blue-800">Key Advantages</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-4">
+                  <Truck className="text-blue-600" size={20} />
+                </div>
+                <div>
+                  <strong>Last-Mile Connectivity:</strong> Reaches remote areas traditional retail can't
+                </div>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-green-100 p-2 rounded-full mr-4">
+                  <Banknote className="text-green-600" size={20} />
+                </div>
+                <div>
+                  <strong>Economic Empowerment:</strong> Creates rural entrepreneurs with 30-50% higher earnings
+                </div>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-purple-100 p-2 rounded-full mr-4">
+                  <Heart className="text-purple-600" size={20} />
+                </div>
+                <div>
+                  <strong>Health & Education:</strong> Delivers essential services to underserved communities
+                </div>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-yellow-100 p-2 rounded-full mr-4">
+                  <Leaf className="text-yellow-600" size={20} />
+                </div>
+                <div>
+                  <strong>Sustainable Model:</strong> Combines profitability with social impact
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-blue-800">Impact Comparison</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={IMPACT_COMPARISON}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="name" />
+                  <PolarRadiusAxis angle={30} domain={[0, 10]} />
+                  <Radar name="Traditional Retail" dataKey="traditional" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                  <Radar name="Mobile Retail Vans" dataKey="mrv" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 bg-blue-50 rounded-xl p-6">
+          <h3 className="text-xl font-semibold mb-4 text-blue-800">Rural Transformation Metrics</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="text-2xl font-bold text-blue-600 mb-2">3-5x</div>
+              <div>Increase in product accessibility</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="text-2xl font-bold text-green-600 mb-2">25-40%</div>
+              <div>Reduction in consumer prices</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="text-2xl font-bold text-purple-600 mb-2">60-80%</div>
+              <div>Of rural households served regularly</div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -569,9 +796,12 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
           transition={{ duration: 0.5 }}
           className="flex justify-between items-center mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center">
-            <Truck className="mr-4 text-blue-600" /> Mobile Retail Vans
-          </h1>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-800 flex items-center">
+              <Truck className="mr-4 text-blue-600" /> Mobile Retail Vans
+            </h1>
+            <p className="text-gray-600 mt-2">Bridging the rural-urban divide through mobile commerce</p>
+          </div>
           <div className="flex space-x-4">
             <div className="relative">
               <input 
@@ -587,14 +817,20 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsCreateVanModalOpen(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center"
+              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center"
             >
               <Plus className="mr-2" /> Add New Van
             </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsImpactModalOpen(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition flex items-center"
+            >
+              <Info className="mr-2" /> Why MRVs?
+            </motion.button>
           </div>
         </motion.div>
-
-        
 
         {/* System Overview Cards */}
         <motion.div 
@@ -632,148 +868,184 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center mb-4">
-              <Globe className="text-green-600 mr-3" />
-              <h3 className="text-xl font-semibold">Entrepreneurs</h3>
+              <Banknote className="text-yellow-600 mr-3" />
+              <h3 className="text-xl font-semibold">Income Generated</h3>
             </div>
-            <div className="text-4xl font-bold text-gray-800">
-              {systemStats.entrepreneursEmpowered}
+            <div className="text-4xl font-bold text-green-800">
+              ₹{systemStats.incomeGenerated.toLocaleString()}
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center mb-4">
-              <Star className="text-yellow-600 mr-3" />
-              <h3 className="text-xl font-semibold">Social Impact</h3>
+              <Leaf className="text-teal-600 mr-3" />
+              <h3 className="text-xl font-semibold">Farmers Trained</h3>
             </div>
-            <div className="text-4xl font-bold text-green-800">
-              {systemStats.totalSocialImpact}
+            <div className="text-4xl font-bold text-teal-800">
+              {systemStats.farmersTrained}
             </div>
           </div>
         </motion.div>
 
         {/* Visualization Section */}
-<motion.div 
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{ duration: 0.5, delay: 0.6 }}
-  className="grid md:grid-cols-2 gap-8 mb-8"
->
-  {/* Product Distribution Pie Chart */}
-  <div className="bg-white rounded-xl shadow-lg p-6">
-    <h3 className="text-xl font-semibold mb-4 flex items-center">
-      <Package className="mr-2 text-blue-600" /> Product Distribution
-    </h3>
-    {productDistributionData.length > 0 ? (
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={productDistributionData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-            outerRadius={80}
-            fill="#8884d8"
-            dataKey="value"
-          >
-            {productDistributionData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(value, name, props) => [
-              value, 
-              `${name}: ${(props.payload.percent * 100).toFixed(1)}%`
-            ]}
-          />
-          <Legend 
-            layout="horizontal" 
-            verticalAlign="bottom" 
-            align="center"
-          />
-        </PieChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        No product distribution data available
-      </div>
-    )}
-  </div>
-
-  {/* Performance Metrics Bar Chart */}
-  <div className="bg-white rounded-xl shadow-lg p-6">
-    <h3 className="text-xl font-semibold mb-4 flex items-center">
-      <BarChart className="mr-2 text-green-600" /> Van Performance
-    </h3>
-    {performanceChartData.length > 0 ? (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={performanceChartData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis yAxisId="left" orientation="left" />
-          <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
-          <Tooltip />
-          <Legend />
-          <Bar yAxisId="left" dataKey="sales" name="Sales (₹)" fill="#8884d8" />
-          <Bar yAxisId="right" dataKey="satisfaction" name="Satisfaction (%)" fill="#82ca9d" />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        No performance data available
-      </div>
-    )}
-  </div>
-
-  {/* Social Impact Bar Chart */}
-  <div className="bg-white rounded-xl shadow-lg p-6">
-    <h3 className="text-xl font-semibold mb-4 flex items-center">
-      <Users className="mr-2 text-purple-600" /> Social Impact
-    </h3>
-    {socialImpactData.length > 0 ? (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={socialImpactData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="value" fill="#8884d8" />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        No social impact data available
-      </div>
-    )}
-  </div>
-
-  {/* Revenue vs Impact Chart */}
-  <div className="bg-white rounded-xl shadow-lg p-6">
-    <h3 className="text-xl font-semibold mb-4 flex items-center">
-      <Globe className="mr-2 text-green-600" /> Revenue vs Social Impact
-    </h3>
-    {revenueData.length > 0 ? (
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart
-          data={revenueData}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="grid md:grid-cols-2 gap-8 mb-8"
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis yAxisId="left" orientation="left" />
-          <YAxis yAxisId="right" orientation="right" />
-          <Tooltip />
-          <Legend />
-          <Bar yAxisId="left" dataKey="revenue" name="Revenue (₹)" fill="#0088FE" />
-          <Bar yAxisId="right" dataKey="impact" name="Social Impact (₹)" fill="#00C49F" />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        No revenue data available
-      </div>
-    )}
-  </div>
-</motion.div>
+          {/* Product Distribution Pie Chart */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center">
+              <Package className="mr-2 text-blue-600" /> Product Distribution
+            </h3>
+            {productDistributionData.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={productDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {productDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name, props) => [
+                        value, 
+                        `${name}: ${(props.payload.percent * 100).toFixed(1)}%`
+                      ]}
+                    />
+                    <Legend 
+                      layout="horizontal" 
+                      verticalAlign="bottom" 
+                      align="center"
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No product distribution data available
+              </div>
+            )}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {productDistributionData.map((product, index) => (
+                <div key={index} className="flex items-center text-sm">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  <span className="truncate">{product.name}:</span>
+                  <span className="font-medium ml-1">{product.impact}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Performance Metrics Bar Chart */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center">
+              <BarChart className="mr-2 text-green-600" /> Van Performance
+            </h3>
+            {performanceChartData.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={performanceChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis yAxisId="left" orientation="left" />
+                    <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="sales" name="Sales (₹)" fill="#8884d8" />
+                    <Bar yAxisId="right" dataKey="profit" name="Profit Margin (%)" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No performance data available
+              </div>
+            )}
+            <div className="mt-4 text-sm text-gray-600">
+              <strong>Key Insight:</strong> Mobile retail vans achieve 25-35% profit margins while creating social impact
+            </div>
+          </div>
+
+          {/* Social Impact Bar Chart */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center">
+              <Users className="mr-2 text-purple-600" /> Social Impact
+            </h3>
+            {socialImpactData.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={socialImpactData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No social impact data available
+              </div>
+            )}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {socialImpactData.map((impact, index) => (
+                <div key={index} className="flex items-center text-sm">
+                  <impact.icon className="mr-2" size={16} />
+                  <span>{impact.name}:</span>
+                  <span className="font-medium ml-1">
+                    {impact.name.includes('Income') ? '₹' : ''}
+                    {impact.value.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Revenue vs Impact Chart */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center">
+              <Globe className="mr-2 text-green-600" /> Revenue vs Social Impact
+            </h3>
+            {revenueData.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis yAxisId="left" orientation="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="revenue" name="Revenue (₹)" fill="#0088FE" />
+                    <Bar yAxisId="right" dataKey="impact" name="Social Impact (₹)" fill="#00C49F" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No revenue data available
+              </div>
+            )}
+            <div className="mt-4 text-sm text-gray-600">
+              <strong>Key Insight:</strong> Every ₹1 in revenue generates ₹0.60-0.80 in community impact
+            </div>
+          </div>
+        </motion.div>
 
         {/* Vans Section */}
         <motion.div 
@@ -824,7 +1096,23 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
             </div>
           </div>
           
-          {renderVanView()}
+          {filteredVans.length > 0 ? (
+            renderVanView()
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <Truck size={48} className="mb-4" />
+              <p>No vans match your search criteria</p>
+              <button 
+                onClick={() => {
+                  setFilter('All');
+                  setSearchTerm('');
+                }}
+                className="mt-4 text-blue-600 hover:underline"
+              >
+                Reset filters
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Create Van Modal */}
@@ -937,8 +1225,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
           )}
         </AnimatePresence>
 
-       {/* Edit Van Modal */}
-       <AnimatePresence>
+        {/* Edit Van Modal */}
+        <AnimatePresence>
           {isEditModalOpen && selectedVan && (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -1060,7 +1348,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
                     </button>
                     <button 
                       onClick={() => {
-                        // Update the van in the mobileVans array
                         const updatedVans = mobileVans.map(van => 
                           van.id === selectedVan.id ? selectedVan : van
                         );
@@ -1081,6 +1368,11 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
         {/* Van Details Modal */}
         <AnimatePresence>
           {isVanDetailsModalOpen && renderVanDetailsModal()}
+        </AnimatePresence>
+
+        {/* Impact Comparison Modal */}
+        <AnimatePresence>
+          {isImpactModalOpen && renderImpactComparisonModal()}
         </AnimatePresence>
       </div>
     </motion.div>

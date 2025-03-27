@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react'
+import React, { useState, lazy, Suspense, useEffect, useRef } from 'react'
 import { 
   Truck, 
   Package, 
@@ -23,13 +23,14 @@ import {
 } from 'lucide-react'
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { gsap } from 'gsap';
 
 // Import Components
 import Navbar from './components/Navbar';
 
 // Import assets
 import logo from './assets/logo.png';
-import heroImage from './assets/image.png';
+import indMapSvg from './assets/ind_map.svg';
 import impactImage from './assets/impact.png';
 
 // Lazy load components for better performance
@@ -56,6 +57,53 @@ function LoadingSpinner() {
 
 function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    // GSAP 3D animation for the Indian map
+    if (mapContainerRef.current && mapRef.current) {
+      // Set perspective on the container for 3D effects
+      gsap.set(mapContainerRef.current, { 
+        perspective: 1000,
+        transformStyle: "preserve-3d"
+      });
+      
+      // Create continuous rotation animation
+      gsap.to(mapRef.current, {
+        rotationY: 360,
+        duration: 5,
+        repeat: -1,
+        ease: "none",
+        transformOrigin: "center center"
+      });
+
+      // Floating animation
+      gsap.to(mapRef.current, {
+        y: -15,
+        duration: 3,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+
+      // Shadow effect that responds to rotation
+      gsap.to(mapContainerRef.current, {
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        duration: 6,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut"
+      });
+    }
+
+    return () => {
+      // Clean up animations when component unmounts
+      gsap.killTweensOf(mapRef.current);
+      gsap.killTweensOf(mapContainerRef.current);
+    };
+  }, []);
+
   const dashboardModules = [
     { 
       component: <DroneDashboard />, 
@@ -285,12 +333,19 @@ function App() {
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ duration: 0.6 }}
                       className="mt-8 md:mt-0"
+                      ref={mapContainerRef}
                     >
                       <div className="bg-white rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
                         <img 
-                          src={heroImage} 
-                          alt="GrameenLink Solutions" 
+                          ref={mapRef}
+                          src={indMapSvg} 
+                          alt="India Rural Supply Chain Map" 
                           className="w-full h-auto object-cover"
+                          style={{
+                            transformStyle: 'preserve-3d',
+                            backfaceVisibility: 'visible',
+                            transformOrigin: 'center center'
+                          }}
                         />
                       </div>
                     </motion.div>

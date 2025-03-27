@@ -10,21 +10,29 @@
   },
   "dependencies": {
     "framer-motion": "^12.6.0",
+    "gsap": "^3.12.7",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.263.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^4.10.1",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.4.0",
-    "recharts": "^2.15.1"
+    "recharts": "^2.15.1",
+    "web3": "^4.16.0"
   },
   "devDependencies": {
+    "@react-three/drei": "^10.0.5",
+    "@react-three/fiber": "^8.12.1",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
+    "@types/three": "^0.174.0",
     "@vitejs/plugin-react": "^3.1.0",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7",
+    "three": "^0.174.0",
     "vite": "^4.2.0"
   }
 }
