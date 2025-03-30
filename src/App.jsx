@@ -427,8 +427,8 @@ const ContactSection = () => {
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 mb-2">Email Us</h3>
                   <p className="text-gray-600 mb-3">We typically respond within 24 hours</p>
-                  <a href="mailto:contact@grameenlink.com" className="inline-flex items-center text-green-600 hover:text-green-700 transition">
-                    <span>contact@grameenlink.com</span>
+                  <a href="mailto:grameenlinkservice@gmail.com" className="inline-flex items-center text-green-600 hover:text-green-700 transition">
+                    <span>grameenlinkservice@gmail.com</span>
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </a>
                 </div>
