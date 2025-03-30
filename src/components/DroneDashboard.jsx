@@ -3,7 +3,7 @@ import {
   Truck, MapPin, Clock, Package, Battery, Navigation, Layers,
   Cloud, Map, BarChart2, Home, AlertCircle, Plus, Plane,
   Edit, Trash2, Save, Settings, ShieldCheck, RefreshCw,
-  List, Grid, Filter, ChevronDown, ChevronUp, Heart, Leaf,
+  List, Grid, Filter, ChevronDown, ChevronUp, Heart, Leaf,X,
   Users, Droplet, Wifi, WifiOff, Sun, Moon, Zap, Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +12,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -161,6 +161,42 @@ const DEFAULT_DELIVERIES = [
   }
 ];
 
+// Custom component to handle map view changes
+function MapViewHandler({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
+
+// Error boundary for map components
+class MapErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Map rendering error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-full bg-red-50 text-red-600">
+          <AlertCircle className="mr-2" /> Error rendering map
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function DroneDashboard() {
   // Load data from localStorage or use defaults
   const loadFromLocalStorage = (key, defaultValue) => {
@@ -204,6 +240,7 @@ function DroneDashboard() {
   const [ruralImpactData, setRuralImpactData] = useState([]);
   const [comparisonData, setComparisonData] = useState([]);
   const [connectivityData, setConnectivityData] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [newDelivery, setNewDelivery] = useState({
     origin: '',
@@ -211,8 +248,26 @@ function DroneDashboard() {
     packages: 0,
     type: '',
     priority: 'Medium',
-    ruralArea: true
+    ruralArea: true,
+    route: [
+      { 
+        point: '', 
+        timestamp: new Date().toLocaleTimeString(), 
+        status: 'Preparing',
+        lat: 20.5937, // Default India coordinates
+        lng: 78.9629
+      }
+    ]
   });
+
+  // Check for mobile view
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Initialize state with localStorage or defaults
   const [drones, setDrones] = useState(() => 
@@ -374,7 +429,13 @@ function DroneDashboard() {
                    newDelivery.type === 'Agricultural Supplies' ? 'Seeds and fertilizers' :
                    'Emergency supplies',
       route: [
-        { point: newDelivery.origin, timestamp: new Date().toLocaleTimeString(), status: 'Preparing' }
+        { 
+          point: newDelivery.origin, 
+          timestamp: new Date().toLocaleTimeString(), 
+          status: 'Preparing',
+          lat: 20.5937 + (Math.random() * 2 - 1), // Randomize near India center
+          lng: 78.9629 + (Math.random() * 2 - 1)
+        }
       ],
       drone: {
         model: 'GL-X300',
@@ -396,7 +457,16 @@ function DroneDashboard() {
       packages: 0,
       type: '',
       priority: 'Medium',
-      ruralArea: true
+      ruralArea: true,
+      route: [
+        { 
+          point: '', 
+          timestamp: new Date().toLocaleTimeString(), 
+          status: 'Preparing',
+          lat: 20.5937,
+          lng: 78.9629
+        }
+      ]
     });
   };
 
@@ -454,207 +524,219 @@ function DroneDashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.6 }}
-      className="grid md:grid-cols-2 gap-8 mb-8"
+      className="grid md:grid-cols-2 gap-4 md:gap-8 mb-8"
     >
       {/* Delivery Type Distribution Pie Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
           <Package className="mr-2 text-blue-600" /> Delivery Type Distribution
         </h3>
-        {deliveryTypeData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={deliveryTypeData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {deliveryTypeData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value, name, props) => [
-                  value, 
-                  `${name}: ${(props.payload.percent * 100).toFixed(1)}%`
-                ]}
-              />
-              <Legend 
-                layout="horizontal" 
-                verticalAlign="bottom" 
-                align="center"
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            No delivery data available
-          </div>
-        )}
+        <div className="h-64 md:h-80">
+          {deliveryTypeData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={deliveryTypeData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={isMobile ? 60 : 80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {deliveryTypeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value, name, props) => [
+                    value, 
+                    `${name}: ${(props.payload.percent * 100).toFixed(1)}%`
+                  ]}
+                />
+                <Legend 
+                  layout={isMobile ? "horizontal" : "vertical"}
+                  verticalAlign={isMobile ? "bottom" : "middle"}
+                  align="center"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No delivery data available
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Rural Impact Radar Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
           <Heart className="mr-2 text-red-600" /> Rural Community Impact
         </h3>
-        {ruralImpactData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={ruralImpactData}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="subject" />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} />
-              <Radar 
-                name="Current Impact" 
-                dataKey="A" 
-                stroke="#8884d8" 
-                fill="#8884d8" 
-                fillOpacity={0.6} 
-              />
-              <Radar 
-                name="Potential Impact" 
-                dataKey="B" 
-                stroke="#82ca9d" 
-                fill="#82ca9d" 
-                fillOpacity={0.2} 
-              />
-              <Legend />
-              <Tooltip />
-            </RadarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            No impact data available
-          </div>
-        )}
+        <div className="h-64 md:h-80">
+          {ruralImpactData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={ruralImpactData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="subject" />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                <Radar 
+                  name="Current Impact" 
+                  dataKey="A" 
+                  stroke="#8884d8" 
+                  fill="#8884d8" 
+                  fillOpacity={0.6} 
+                />
+                <Radar 
+                  name="Potential Impact" 
+                  dataKey="B" 
+                  stroke="#82ca9d" 
+                  fill="#82ca9d" 
+                  fillOpacity={0.2} 
+                />
+                <Legend />
+                <Tooltip />
+              </RadarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No impact data available
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Delivery Comparison Bar Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
           <Activity className="mr-2 text-purple-600" /> Drone vs Traditional Delivery
         </h3>
-        {comparisonData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={comparisonData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="drone" name="Drone Delivery" fill="#8884d8" />
-              <Bar dataKey="traditional" name="Traditional" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            No comparison data available
-          </div>
-        )}
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="h-64 md:h-80">
+          {comparisonData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={comparisonData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="drone" name="Drone Delivery" fill="#8884d8" />
+                <Bar dataKey="traditional" name="Traditional" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No comparison data available
+            </div>
+          )}
+        </div>
+        <div className="mt-2 md:mt-4 text-xs md:text-sm text-gray-600">
           <Zap className="inline mr-1" size={14} /> Drones are 3-5x more efficient in rural areas
         </div>
       </div>
 
       {/* Connectivity Reliability Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
           <Wifi className="mr-2 text-blue-600" /> Rural Connectivity Performance
         </h3>
-        {connectivityData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={connectivityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="connectivity" name="Connectivity %" fill="#8884d8" />
-              <Bar dataKey="offlineCapable" name="Offline Capability" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            No connectivity data available
-          </div>
-        )}
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="h-64 md:h-80">
+          {connectivityData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={connectivityData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="connectivity" name="Connectivity %" fill="#8884d8" />
+                <Bar dataKey="offlineCapable" name="Offline Capability" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No connectivity data available
+            </div>
+          )}
+        </div>
+        <div className="mt-2 md:mt-4 text-xs md:text-sm text-gray-600">
           <WifiOff className="inline mr-1" size={14} /> Specialized connectivity solutions for remote areas
         </div>
       </div>
 
       {/* Carbon Savings Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
           <Leaf className="mr-2 text-green-600" /> Environmental Impact
         </h3>
-        {droneDeliveries.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={[
-                {
-                  name: 'Total Savings',
-                  co2: droneDeliveries.reduce((sum, d) => sum + d.drone.co2Saved, 0),
-                  trips: droneDeliveries.length,
-                  ruralTrips: droneDeliveries.filter(d => d.ruralArea).length
-                }
-              ]}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis yAxisId="left" orientation="left" />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip />
-              <Legend />
-              <Bar yAxisId="left" dataKey="co2" name="CO2 Saved (kg)" fill="#00C49F" />
-              <Bar yAxisId="right" dataKey="ruralTrips" name="Rural Deliveries" fill="#0088FE" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            No environmental data available
-          </div>
-        )}
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="h-64 md:h-80">
+          {droneDeliveries.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={[
+                  {
+                    name: 'Total Savings',
+                    co2: droneDeliveries.reduce((sum, d) => sum + d.drone.co2Saved, 0),
+                    trips: droneDeliveries.length,
+                    ruralTrips: droneDeliveries.filter(d => d.ruralArea).length
+                  }
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis yAxisId="left" orientation="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip />
+                <Legend />
+                <Bar yAxisId="left" dataKey="co2" name="CO2 Saved (kg)" fill="#00C49F" />
+                <Bar yAxisId="right" dataKey="ruralTrips" name="Rural Deliveries" fill="#0088FE" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No environmental data available
+            </div>
+          )}
+        </div>
+        <div className="mt-2 md:mt-4 text-xs md:text-sm text-gray-600">
           <Sun className="inline mr-1" size={14} /> 92% of CO2 savings come from rural deliveries
         </div>
       </div>
 
       {/* Cost Savings Line Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold mb-4 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
           <Users className="mr-2 text-green-600" /> Economic Impact
         </h3>
-        {droneDeliveries.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={droneDeliveries.map((d, i) => ({
-                name: d.id,
-                cost: parseInt(d.droneCost.replace(/[^0-9]/g, '')),
-                savings: parseInt(d.traditionalCost.replace(/[^0-9]/g, '')) - parseInt(d.droneCost.replace(/[^0-9]/g, '')),
-                rural: d.ruralArea ? 1 : 0
-              }))}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="cost" name="Drone Cost (₹)" stroke="#8884d8" />
-              <Line type="monotone" dataKey="savings" name="Savings vs Traditional (₹)" stroke="#82ca9d" />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-64 text-gray-500">
-            No economic data available
-          </div>
-        )}
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="h-64 md:h-80">
+          {droneDeliveries.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={droneDeliveries.map((d, i) => ({
+                  name: d.id,
+                  cost: parseInt(d.droneCost.replace(/[^0-9]/g, '')),
+                  savings: parseInt(d.traditionalCost.replace(/[^0-9]/g, '')) - parseInt(d.droneCost.replace(/[^0-9]/g, '')),
+                  rural: d.ruralArea ? 1 : 0
+                }))}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="cost" name="Drone Cost (₹)" stroke="#8884d8" />
+                <Line type="monotone" dataKey="savings" name="Savings vs Traditional (₹)" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No economic data available
+            </div>
+          )}
+        </div>
+        <div className="mt-2 md:mt-4 text-xs md:text-sm text-gray-600">
           <Droplet className="inline mr-1" size={14} /> Average 65% cost reduction in rural deliveries
         </div>
       </div>
@@ -663,18 +745,18 @@ function DroneDashboard() {
 
   const renderDroneView = () => {
     return viewMode === 'grid' ? (
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {sortedDrones.map((drone) => (
           <motion.div 
             key={drone.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all"
+            className="bg-white rounded-xl shadow-lg p-4 md:p-6 hover:shadow-xl transition-all"
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">{drone.model}</h3>
-              <div className="flex space-x-2">
+            <div className="flex justify-between items-center mb-3 md:mb-4">
+              <h3 className="text-lg md:text-xl font-semibold">{drone.model}</h3>
+              <div className="flex space-x-1 md:space-x-2">
                 <span 
                   className={`
                     px-2 py-1 rounded-full text-xs
@@ -687,103 +769,109 @@ function DroneDashboard() {
                 </span>
                 {drone.ruralOptimized && (
                   <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                    Rural Optimized
+                    Rural
                   </span>
                 )}
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1 md:space-y-2 text-sm">
               <div><strong>Drone ID:</strong> {drone.id}</div>
               <div><strong>Max Payload:</strong> {drone.maxPayload}</div>
               <div><strong>Battery:</strong> {drone.batteryLife}</div>
               <div><strong>Location:</strong> {drone.location}</div>
               <div><strong>Connectivity:</strong> {drone.connectivityType}</div>
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex justify-between items-center mt-3">
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div 
                     className="bg-green-600 h-2.5 rounded-full" 
                     style={{ width: `${drone.healthScore}%` }}
                   ></div>
                 </div>
-                <span className="ml-2 text-sm text-gray-600">{drone.healthScore}%</span>
+                <span className="ml-2 text-xs md:text-sm text-gray-600">{drone.healthScore}%</span>
               </div>
             </div>
           </motion.div>
         ))}
       </div>
     ) : (
-      <table className="w-full bg-white rounded-xl shadow-lg">
-        <thead className="bg-gray-100">
-          <tr>
-            {['ID', 'Model', 'Payload', 'Status', 'Battery', 'Location', 'Rural', 'Actions'].map((header) => (
-              <th 
-                key={header} 
-                className="p-3 text-left cursor-pointer hover:bg-gray-200"
-                onClick={() => {
-                  const isAsc = sortConfig.direction === 'asc';
-                  setSortConfig({
-                    key: header.toLowerCase().replace(' ', ''),
-                    direction: isAsc ? 'desc' : 'asc'
-                  });
-                }}
-              >
-                {header}
-                {sortConfig.key === header.toLowerCase().replace(' ', '') && (
-                  sortConfig.direction === 'asc' ? <ChevronUp className="inline ml-1" size={16} /> : <ChevronDown className="inline ml-1" size={16} />
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedDrones.map((drone) => (
-            <tr key={drone.id} className="border-b hover:bg-gray-50 transition-colors">
-              <td className="p-3">{drone.id}</td>
-              <td className="p-3">{drone.model}</td>
-              <td className="p-3">{drone.maxPayload}</td>
-              <td className="p-3">
-                <span 
-                  className={`
-                    px-2 py-1 rounded-full text-xs
-                    ${drone.status === 'Active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'}
-                  `}
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white rounded-xl shadow-lg">
+          <thead className="bg-gray-100">
+            <tr>
+              {['ID', 'Model', 'Payload', 'Status', 'Battery', 'Location', 'Rural', 'Actions'].map((header) => (
+                <th 
+                  key={header} 
+                  className="p-2 md:p-3 text-left text-xs md:text-sm cursor-pointer hover:bg-gray-200"
+                  onClick={() => {
+                    const isAsc = sortConfig.direction === 'asc';
+                    setSortConfig({
+                      key: header.toLowerCase().replace(' ', ''),
+                      direction: isAsc ? 'desc' : 'asc'
+                    });
+                  }}
                 >
-                  {drone.status}
-                </span>
-              </td>
-              <td className="p-3">{drone.batteryLife}</td>
-              <td className="p-3">{drone.location}</td>
-              <td className="p-3">
-                {drone.ruralOptimized ? (
-                  <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                    Optimized
-                  </span>
-                ) : (
-                  <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                    Standard
-                  </span>
-                )}
-              </td>
-              <td className="p-3 flex space-x-2">
-                <button 
-                  onClick={() => setDroneEditMode(drone)}
-                  className="text-blue-600 hover:bg-blue-50 p-2 rounded-full"
-                >
-                  <Edit size={18} />
-                </button>
-                <button 
-                  onClick={() => handleDroneDeletion(drone.id)}
-                  className="text-red-600 hover:bg-red-50 p-2 rounded-full"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </td>
+                  <div className="flex items-center">
+                    {header}
+                    {sortConfig.key === header.toLowerCase().replace(' ', '') && (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="ml-1" size={14} /> : <ChevronDown className="ml-1" size={14} />
+                    )}
+                  </div>
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedDrones.map((drone) => (
+              <tr key={drone.id} className="border-b hover:bg-gray-50 transition-colors">
+                <td className="p-2 md:p-3 text-xs md:text-sm">{drone.id}</td>
+                <td className="p-2 md:p-3 text-xs md:text-sm">{drone.model}</td>
+                <td className="p-2 md:p-3 text-xs md:text-sm">{drone.maxPayload}</td>
+                <td className="p-2 md:p-3 text-xs md:text-sm">
+                  <span 
+                    className={`
+                      px-2 py-1 rounded-full text-xs
+                      ${drone.status === 'Active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : drone.status === 'Pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-blue-100 text-blue-800'}
+                    `}
+                  >
+                    {drone.status}
+                  </span>
+                </td>
+                <td className="p-2 md:p-3 text-xs md:text-sm">{drone.batteryLife}</td>
+                <td className="p-2 md:p-3 text-xs md:text-sm">{drone.location}</td>
+                <td className="p-2 md:p-3 text-xs md:text-sm">
+                  {drone.ruralOptimized ? (
+                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                      Optimized
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                      Standard
+                    </span>
+                  )}
+                </td>
+                <td className="p-2 md:p-3 text-xs md:text-sm flex space-x-1 md:space-x-2">
+                  <button 
+                    onClick={() => setDroneEditMode(drone)}
+                    className="text-blue-600 hover:bg-blue-50 p-1 md:p-2 rounded-full"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button 
+                    onClick={() => handleDroneDeletion(drone.id)}
+                    className="text-red-600 hover:bg-red-50 p-1 md:p-2 rounded-full"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
@@ -792,103 +880,111 @@ function DroneDashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.9 }}
-        className="bg-white rounded-2xl p-12 mt-12 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl p-4 md:p-6 lg:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
       >
-        <h2 className="text-3xl font-bold mb-6 text-green-700 flex items-center">
-          <Heart className="mr-3" size={28} /> Rural Drone Delivery Benefits
-        </h2>
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-green-700 flex items-center">
+            <Heart className="mr-3" size={28} /> Rural Drone Delivery Benefits
+          </h2>
+          <button 
+            onClick={() => setIsBenefitsModalOpen(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <X size={24} />
+          </button>
+        </div>
         
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-green-50 p-6 rounded-xl">
-            <h3 className="text-xl font-semibold mb-4 flex items-center text-green-700">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-6">
+          <div className="bg-green-50 p-4 md:p-6 rounded-xl">
+            <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center text-green-700">
               <Zap className="mr-2" /> Efficiency Advantages
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               <li className="flex items-start">
-                <span className="bg-green-100 p-1 rounded-full mr-3">
+                <span className="bg-green-100 p-1 rounded-full mr-2 md:mr-3">
                   <Clock size={16} className="text-green-600" />
                 </span>
-                <span><strong>4-10x faster</strong> than road transport in rural areas</span>
+                <span className="text-sm md:text-base"><strong>4-10x faster</strong> than road transport in rural areas</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-green-100 p-1 rounded-full mr-3">
+                <span className="bg-green-100 p-1 rounded-full mr-2 md:mr-3">
                   <Droplet size={16} className="text-green-600" />
                 </span>
-                <span><strong>60-80% cost reduction</strong> per delivery compared to traditional methods</span>
+                <span className="text-sm md:text-base"><strong>60-80% cost reduction</strong> per delivery compared to traditional methods</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-green-100 p-1 rounded-full mr-3">
+                <span className="bg-green-100 p-1 rounded-full mr-2 md:mr-3">
                   <Leaf size={16} className="text-green-600" />
                 </span>
-                <span><strong>90% less CO2</strong> emissions than road vehicles</span>
+                <span className="text-sm md:text-base"><strong>90% less CO2</strong> emissions than road vehicles</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-green-100 p-1 rounded-full mr-3">
+                <span className="bg-green-100 p-1 rounded-full mr-2 md:mr-3">
                   <Wifi size={16} className="text-green-600" />
                 </span>
-                <span><strong>Specialized connectivity</strong> solutions for areas with poor infrastructure</span>
+                <span className="text-sm md:text-base"><strong>Specialized connectivity</strong> solutions for areas with poor infrastructure</span>
               </li>
             </ul>
           </div>
 
-          <div className="bg-blue-50 p-6 rounded-xl">
-            <h3 className="text-xl font-semibold mb-4 flex items-center text-blue-700">
+          <div className="bg-blue-50 p-4 md:p-6 rounded-xl">
+            <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center text-blue-700">
               <Users className="mr-2" /> Social Impact
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2 md:space-y-3">
               <li className="flex items-start">
-                <span className="bg-blue-100 p-1 rounded-full mr-3">
+                <span className="bg-blue-100 p-1 rounded-full mr-2 md:mr-3">
                   <Heart size={16} className="text-blue-600" />
                 </span>
-                <span><strong>Life-saving deliveries</strong> of medicines and vaccines to remote clinics</span>
+                <span className="text-sm md:text-base"><strong>Life-saving deliveries</strong> of medicines and vaccines to remote clinics</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-blue-100 p-1 rounded-full mr-3">
+                <span className="bg-blue-100 p-1 rounded-full mr-2 md:mr-3">
                   <Package size={16} className="text-blue-600" />
                 </span>
-                <span><strong>Agricultural supplies</strong> delivered just-in-time for planting seasons</span>
+                <span className="text-sm md:text-base"><strong>Agricultural supplies</strong> delivered just-in-time for planting seasons</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-blue-100 p-1 rounded-full mr-3">
+                <span className="bg-blue-100 p-1 rounded-full mr-2 md:mr-3">
                   <Activity size={16} className="text-blue-600" />
                 </span>
-                <span><strong>Economic empowerment</strong> by connecting rural producers to markets</span>
+                <span className="text-sm md:text-base"><strong>Economic empowerment</strong> by connecting rural producers to markets</span>
               </li>
               <li className="flex items-start">
-                <span className="bg-blue-100 p-1 rounded-full mr-3">
+                <span className="bg-blue-100 p-1 rounded-full mr-2 md:mr-3">
                   <Sun size={16} className="text-blue-600" />
                 </span>
-                <span><strong>All-weather capability</strong> reaching areas inaccessible during monsoons</span>
+                <span className="text-sm md:text-base"><strong>All-weather capability</strong> reaching areas inaccessible during monsoons</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="bg-purple-50 p-6 rounded-xl mb-8">
-          <h3 className="text-xl font-semibold mb-4 flex items-center text-purple-700">
+        <div className="bg-purple-50 p-4 md:p-6 rounded-xl mb-6">
+          <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center text-purple-700">
             <BarChart2 className="mr-2" /> Business Case
           </h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-purple-600 mb-2">₹450-800</div>
-              <div className="text-sm">Average cost per rural delivery</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+              <div className="text-xl md:text-2xl font-bold text-purple-600 mb-1 md:mb-2">₹450-800</div>
+              <div className="text-xs md:text-sm">Average cost per rural delivery</div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-purple-600 mb-2">65-80%</div>
-              <div className="text-sm">Cost savings vs traditional</div>
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+              <div className="text-xl md:text-2xl font-bold text-purple-600 mb-1 md:mb-2">65-80%</div>
+              <div className="text-xs md:text-sm">Cost savings vs traditional</div>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-purple-600 mb-2">2-3x</div>
-              <div className="text-sm">More deliveries per day per drone</div>
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow">
+              <div className="text-xl md:text-2xl font-bold text-purple-600 mb-1 md:mb-2">2-3x</div>
+              <div className="text-xs md:text-sm">More deliveries per day per drone</div>
             </div>
           </div>
-          <div className="mt-6 text-sm text-purple-700">
+          <div className="mt-4 md:mt-6 text-sm md:text-base text-purple-700">
             <strong>Profit meets purpose:</strong> Our rural-optimized drone network achieves profitability while 
             serving communities traditional logistics cannot reach, creating shared value for businesses and rural populations.
           </div>
@@ -897,7 +993,7 @@ function DroneDashboard() {
         <div className="flex justify-end">
           <button 
             onClick={() => setIsBenefitsModalOpen(false)}
-            className="bg-green-600 text-white px-6 py-3 rounded-full text-lg"
+            className="bg-green-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-full text-sm md:text-base"
           >
             Close
           </button>
@@ -911,55 +1007,55 @@ function DroneDashboard() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gray-100 p-8"
+      className="min-h-screen bg-gray-100 p-4 md:p-6 lg:p-8"
     >
-      <div className="container mx-auto mt-20">
+      <div className="container mx-auto mt-16 md:mt-20">
         {/* Header */}
-        <header className="mb-12">
-          <div className="flex justify-between items-start">
+        <header className="mb-8 md:mb-12">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 flex items-center">
-                <Navigation className="mr-4 text-green-600" />Rural Drone Logistics Network
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 flex items-center">
+                <Navigation className="mr-2 md:mr-4 text-green-600" />Rural Drone Logistics Network
               </h1>
-              <p className="text-lg text-gray-600 mt-2">
+              <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">
                 Bridging the last-mile gap in rural India with sustainable aerial delivery
               </p>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsBenefitsModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center mt-2"
+                className="bg-blue-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-full hover:bg-blue-700 transition flex items-center"
               >
-                <Heart className="mr-2" /> Rural Benefits
+                <Heart className="mr-1 md:mr-2" size={16} /> Rural Benefits
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleResetData}
-                className="bg-gray-600 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition flex items-center mt-2"
+                className="bg-gray-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-full hover:bg-gray-700 transition flex items-center"
               >
-                <RefreshCw className="mr-2" /> Reset Data
+                <RefreshCw className="mr-1 md:mr-2" size={16} /> Reset Data
               </motion.button>
             </div>
           </div>
-          <div className="flex space-x-4 mt-4">
+          <div className="flex flex-wrap gap-2 mt-3 md:mt-4">
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsCreateDeliveryOpen(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition flex items-center mt-2"
+              className="bg-green-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-full hover:bg-green-700 transition flex items-center"
             >
-              <Plus className="mr-2" /> Create New Delivery
+              <Plus className="mr-1 md:mr-2" size={16} /> Create New Delivery
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsFleetManagementOpen(true)}
-              className="border border-green-600 text-green-600 px-4 py-2 rounded-full hover:bg-green-50 transition flex items-center mt-2"
+              className="border border-green-600 text-green-600 px-3 py-1 md:px-4 md:py-2 rounded-full hover:bg-green-50 transition flex items-center"
             >
-              <Truck className="mr-2" /> Fleet Management
+              <Truck className="mr-1 md:mr-2" size={16} /> Fleet Management
             </motion.button>
           </div>
         </header>
@@ -969,53 +1065,53 @@ function DroneDashboard() {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid md:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8"
         >
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Truck className="text-blue-600 mr-3" />
-              <h3 className="text-xl font-semibold">Total Deliveries</h3>
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-4">
+            <div className="flex items-center mb-2 md:mb-3">
+              <Truck className="text-blue-600 mr-2 md:mr-3" size={16} />
+              <h3 className="text-sm md:text-base font-semibold">Total Deliveries</h3>
             </div>
-            <div className="text-4xl font-bold text-gray-800">
+            <div className="text-2xl md:text-3xl font-bold text-gray-800">
               {systemStats.totalDeliveries}
             </div>
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-xs md:text-sm text-gray-500 mt-1">
               {droneDeliveries.filter(d => d.ruralArea).length} rural ({Math.round(droneDeliveries.filter(d => d.ruralArea).length / droneDeliveries.length * 100)}%)
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Clock className="text-purple-600 mr-3" />
-              <h3 className="text-xl font-semibold">Avg Delivery Time</h3>
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-4">
+            <div className="flex items-center mb-2 md:mb-3">
+              <Clock className="text-purple-600 mr-2 md:mr-3" size={16} />
+              <h3 className="text-sm md:text-base font-semibold">Avg Delivery Time</h3>
             </div>
-            <div className="text-4xl font-bold text-gray-800">
+            <div className="text-2xl md:text-3xl font-bold text-gray-800">
               {systemStats.averageDeliveryTime} mins
             </div>
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-xs md:text-sm text-gray-500 mt-1">
               vs 4.2 hours traditional
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Leaf className="text-green-600 mr-3" />
-              <h3 className="text-xl font-semibold">CO2 Saved</h3>
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-4">
+            <div className="flex items-center mb-2 md:mb-3">
+              <Leaf className="text-green-600 mr-2 md:mr-3" size={16} />
+              <h3 className="text-sm md:text-base font-semibold">CO2 Saved</h3>
             </div>
-            <div className="text-4xl font-bold text-green-800">
+            <div className="text-2xl md:text-3xl font-bold text-green-800">
               {systemStats.carbonSaved} kg
             </div>
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-xs md:text-sm text-gray-500 mt-1">
               92% from rural deliveries
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Users className="text-blue-600 mr-3" />
-              <h3 className="text-xl font-semibold">Cost Savings</h3>
+          <div className="bg-white rounded-xl shadow-lg p-3 md:p-4">
+            <div className="flex items-center mb-2 md:mb-3">
+              <Users className="text-blue-600 mr-2 md:mr-3" size={16} />
+              <h3 className="text-sm md:text-base font-semibold">Cost Savings</h3>
             </div>
-            <div className="text-4xl font-bold text-blue-800">
+            <div className="text-2xl md:text-3xl font-bold text-blue-800">
               ₹{systemStats.costSavings}
             </div>
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-xs md:text-sm text-gray-500 mt-1">
               vs traditional methods
             </div>
           </div>
@@ -1029,16 +1125,16 @@ function DroneDashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8"
+          className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 md:mb-8"
         >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Current Deliveries</h2>
-            <div className="flex space-x-2">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 md:mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Current Deliveries</h2>
+            <div className="flex flex-wrap gap-1 md:gap-2">
               {['All', 'In Transit', 'Pending', 'Completed'].map((statusFilter) => (
                 <button 
                   key={statusFilter}
                   className={`
-                    px-3 py-1 rounded-full text-sm font-medium
+                    px-2 py-1 md:px-3 md:py-1 rounded-full text-xs md:text-sm font-medium
                     ${filter === statusFilter 
                       ? 'bg-green-600 text-white' 
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
@@ -1050,7 +1146,7 @@ function DroneDashboard() {
               ))}
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {filteredDeliveries.map((delivery) => (
               <motion.div 
                 key={delivery.id} 
@@ -1058,39 +1154,45 @@ function DroneDashboard() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
                 className={`
-                  border rounded-lg p-4 transition 
+                  border rounded-lg p-3 md:p-4 transition 
                   ${selectedDelivery === delivery.id 
                     ? 'border-green-600 bg-green-50' 
                     : 'border-gray-200 hover:border-green-300'}
                 `}
                 onClick={() => setSelectedDelivery(delivery.id)}
               >
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
                   <div className="flex items-center">
-                    <Navigation className="mr-3 text-green-600" />
+                    <Navigation className="mr-2 md:mr-3 text-green-600" size={16} />
                     <div>
-                      <div className="font-semibold">
+                      <div className="font-semibold text-sm md:text-base">
                         {delivery.id} - {delivery.origin} to {delivery.destination}
                         {delivery.ruralArea && (
-                          <span className="ml-2 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                          <span className="ml-2 px-2 py-0.5 md:py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                             Rural Area
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-600 flex items-center">
-                        <Package className="inline-block mr-1 h-4 w-4" />
-                        {delivery.packages} Packages | 
-                        <MapPin className="inline-block ml-2 mr-1 h-4 w-4" />
-                        {delivery.distance} | 
-                        <Clock className="inline-block ml-2 mr-1 h-4 w-4" />
-                        {delivery.eta} (vs {delivery.traditionalDeliveryTime} traditional)
+                      <div className="text-xs md:text-sm text-gray-600 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="flex items-center">
+                          <Package className="inline-block mr-1 h-3 w-3 md:h-4 md:w-4" />
+                          {delivery.packages} Packages
+                        </span>
+                        <span className="flex items-center">
+                          <MapPin className="inline-block mr-1 h-3 w-3 md:h-4 md:w-4" />
+                          {delivery.distance}
+                        </span>
+                        <span className="flex items-center">
+                          <Clock className="inline-block mr-1 h-3 w-3 md:h-4 md:w-4" />
+                          {delivery.eta} (vs {delivery.traditionalDeliveryTime} traditional)
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-wrap gap-2">
                     <div 
                       className={`
-                        px-3 py-1 rounded-full text-sm font-medium
+                        px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-medium
                         ${delivery.status === 'In Transit' 
                           ? 'bg-green-100 text-green-800' 
                           : delivery.status === 'Pending'
@@ -1102,7 +1204,7 @@ function DroneDashboard() {
                     </div>
                     <div 
                       className={`
-                        px-3 py-1 rounded-full text-sm font-medium
+                        px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-medium
                         ${delivery.priority === 'High' 
                           ? 'bg-red-100 text-red-800' 
                           : delivery.priority === 'Medium'
@@ -1126,10 +1228,10 @@ function DroneDashboard() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-white rounded-xl shadow-lg p-6 mb-8"
+              className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 md:mb-8"
             >
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">
+              <div className="flex justify-between items-start mb-4 md:mb-6">
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
                   Delivery Details: {selectedDelivery}
                 </h2>
                 <button 
@@ -1140,12 +1242,12 @@ function DroneDashboard() {
                 </button>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 flex items-center">
-                    <BarChart2 className="mr-2 text-blue-600" /> Delivery Specifications
+                  <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
+                    <BarChart2 className="mr-2 text-blue-600" size={16} /> Delivery Specifications
                   </h3>
-                  <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                  <div className="space-y-2 bg-gray-50 p-3 md:p-4 rounded-lg text-sm md:text-base">
                     <div>
                       <strong>Type:</strong> {droneDeliveries.find(d => d.id === selectedDelivery)?.type}
                     </div>
@@ -1170,10 +1272,10 @@ function DroneDashboard() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 flex items-center">
-                    <Activity className="mr-2 text-green-600" /> Efficiency Comparison
+                  <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
+                    <Activity className="mr-2 text-green-600" size={16} /> Efficiency Comparison
                   </h3>
-                  <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                  <div className="space-y-2 bg-gray-50 p-3 md:p-4 rounded-lg text-sm md:text-base">
                     <div className="flex justify-between">
                       <span>Method</span>
                       <span>Drone</span>
@@ -1194,8 +1296,8 @@ function DroneDashboard() {
                       <span className="font-medium">{droneDeliveries.find(d => d.id === selectedDelivery)?.droneCO2} kg</span>
                       <span>{droneDeliveries.find(d => d.id === selectedDelivery)?.traditionalCO2} kg</span>
                     </div>
-                    <div className="pt-2 mt-2 border-t border-gray-200 text-sm text-green-600">
-                      <Zap className="inline mr-1" size={14} /> 
+                    <div className="pt-2 mt-2 border-t border-gray-200 text-xs md:text-sm text-green-600">
+                      <Zap className="inline mr-1" size={12} /> 
                       {droneDeliveries.find(d => d.id === selectedDelivery)?.ruralArea ? 
                         'This rural delivery achieves significant savings' : 
                         'Standard urban delivery efficiency'}
@@ -1204,12 +1306,12 @@ function DroneDashboard() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 flex items-center">
-                    <Truck className="mr-2 text-blue-600" /> Drone Specifications
+                  <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
+                    <Truck className="mr-2 text-blue-600" size={16} /> Drone Specifications
                   </h3>
-                  <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                  <div className="space-y-2 bg-gray-50 p-3 md:p-4 rounded-lg text-sm md:text-base">
                     <div>
                       <strong>Model:</strong> {droneDeliveries.find(d => d.id === selectedDelivery)?.drone?.model}
                     </div>
@@ -1228,41 +1330,57 @@ function DroneDashboard() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 flex items-center">
-                    <Map className="mr-2 text-green-600" /> Route Tracking
+                  <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 flex items-center">
+                    <Map className="mr-2 text-green-600" size={16} /> Route Tracking
                   </h3>
                   <div className="h-64 bg-gray-100 rounded-lg overflow-hidden">
-                    {droneDeliveries.find(d => d.id === selectedDelivery)?.route?.length > 0 && (
-                      <MapContainer 
-                        center={[
-                          droneDeliveries.find(d => d.id === selectedDelivery)?.route[0]?.lat || 20.5937,
-                          droneDeliveries.find(d => d.id === selectedDelivery)?.route[0]?.lng || 78.9629
-                        ]} 
-                        zoom={7} 
-                        style={{ height: '100%', width: '100%' }}
-                      >
-                        <TileLayer
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        />
-                        {droneDeliveries.find(d => d.id === selectedDelivery)?.route?.map((point, i) => (
-                          <Marker key={i} position={[point.lat, point.lng]}>
-                            <Popup>
-                              <div>
-                                <strong>{point.point}</strong><br />
-                                {point.timestamp} - {point.status}
-                              </div>
-                            </Popup>
-                          </Marker>
-                        ))}
-                        {droneDeliveries.find(d => d.id === selectedDelivery)?.route?.length > 1 && (
-                          <Polyline 
-                            positions={droneDeliveries.find(d => d.id === selectedDelivery)?.route?.map(p => [p.lat, p.lng])} 
-                            color="green"
+                    <MapErrorBoundary>
+                      {droneDeliveries.find(d => d.id === selectedDelivery)?.route?.length > 0 ? (
+                        <MapContainer 
+                          center={[
+                            droneDeliveries.find(d => d.id === selectedDelivery)?.route[0]?.lat || 20.5937,
+                            droneDeliveries.find(d => d.id === selectedDelivery)?.route[0]?.lng || 78.9629
+                          ]} 
+                          zoom={7} 
+                          style={{ height: '100%', width: '100%' }}
+                        >
+                          <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                           />
-                        )}
-                      </MapContainer>
-                    )}
+                          <MapViewHandler 
+                            center={[
+                              droneDeliveries.find(d => d.id === selectedDelivery)?.route[0]?.lat || 20.5937,
+                              droneDeliveries.find(d => d.id === selectedDelivery)?.route[0]?.lng || 78.9629
+                            ]}
+                          />
+                          {droneDeliveries.find(d => d.id === selectedDelivery)?.route?.map((point, i) => (
+                            point.lat && point.lng && (
+                              <Marker key={i} position={[point.lat, point.lng]}>
+                                <Popup>
+                                  <div className="text-sm">
+                                    <strong>{point.point}</strong><br />
+                                    {point.timestamp} - {point.status}
+                                  </div>
+                                </Popup>
+                              </Marker>
+                            )
+                          ))}
+                          {droneDeliveries.find(d => d.id === selectedDelivery)?.route?.length > 1 && (
+                            <Polyline 
+                              positions={droneDeliveries.find(d => d.id === selectedDelivery)?.route
+                                ?.filter(p => p.lat && p.lng)
+                                ?.map(p => [p.lat, p.lng])} 
+                              color="green"
+                            />
+                          )}
+                        </MapContainer>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                          No route data available
+                        </div>
+                      )}
+                    </MapErrorBoundary>
                   </div>
                 </div>
               </div>
@@ -1277,43 +1395,51 @@ function DroneDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
               <motion.div
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.9 }}
-                className="bg-white rounded-xl p-12 mt-12 w-full max-w-lg"
+                className="bg-white rounded-xl p-4 md:p-6 w-full max-w-md"
               >
-                <h2 className="text-2xl font-bold mb-6 flex items-center">
-                  <Plus className="mr-2 text-green-600" /> Create New Delivery
-                </h2>
-                <div className="space-y-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl md:text-2xl font-bold flex items-center">
+                    <Plus className="mr-2 text-green-600" /> Create New Delivery
+                  </h2>
+                  <button 
+                    onClick={() => setIsCreateDeliveryOpen(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+                <div className="space-y-3 md:space-y-4">
                   <input 
                     type="text"
                     placeholder="Origin"
                     value={newDelivery.origin}
                     onChange={(e) => setNewDelivery({...newDelivery, origin: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base"
                   />
                   <input 
                     type="text"
                     placeholder="Destination"
                     value={newDelivery.destination}
                     onChange={(e) => setNewDelivery({...newDelivery, destination: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base"
                   />
                   <input 
                     type="number"
                     placeholder="Number of Packages"
                     value={newDelivery.packages}
                     onChange={(e) => setNewDelivery({...newDelivery, packages: parseInt(e.target.value)})}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base"
                   />
                   <select
                     value={newDelivery.type}
                     onChange={(e) => setNewDelivery({...newDelivery, type: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base"
                   >
                     <option value="">Select Delivery Type</option>
                     <option value="Medical Supplies">Medical Supplies</option>
@@ -1324,7 +1450,7 @@ function DroneDashboard() {
                   <select
                     value={newDelivery.priority}
                     onChange={(e) => setNewDelivery({...newDelivery, priority: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 md:p-3 border rounded-lg text-sm md:text-base"
                   >
                     <option value="Low">Low Priority</option>
                     <option value="Medium">Medium Priority</option>
@@ -1338,18 +1464,18 @@ function DroneDashboard() {
                       onChange={(e) => setNewDelivery({...newDelivery, ruralArea: e.target.checked})}
                       className="mr-2"
                     />
-                    <label htmlFor="ruralArea">Rural Area Delivery</label>
+                    <label htmlFor="ruralArea" className="text-sm md:text-base">Rural Area Delivery</label>
                   </div>
-                  <div className="flex justify-end space-x-4">
+                  <div className="flex justify-end space-x-2 md:space-x-4">
                     <button 
                       onClick={() => setIsCreateDeliveryOpen(false)}
-                      className="px-4 py-2 border rounded-full"
+                      className="px-3 py-2 md:px-4 md:py-2 border rounded-full text-sm md:text-base"
                     >
                       Cancel
                     </button>
                     <button 
                       onClick={handleCreateDelivery}
-                      className="bg-green-600 text-white px-4 py-2 rounded-full"
+                      className="px-3 py-2 md:px-4 md:py-2 bg-green-600 text-white rounded-full text-sm md:text-base"
                     >
                       Create Delivery
                     </button>
@@ -1367,57 +1493,59 @@ function DroneDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
               <motion.div
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.9 }}
-                className="bg-white rounded-2xl p-12 mt-12 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-2xl p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
               >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold flex items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4 md:mb-6">
+                  <h2 className="text-xl md:text-2xl font-bold flex items-center">
                     <Truck className="mr-2 text-green-600" /> Fleet Management
                   </h2>
-                  <div className="flex space-x-4 items-center">
+                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
                     <input 
                       type="text"
                       placeholder="Search drones..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="px-3 py-2 border rounded-lg"
+                      className="px-3 py-2 border rounded-lg text-sm md:text-base w-full"
                     />
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-green-100' : 'hover:bg-gray-100'}`}
+                    <div className="flex items-center gap-2">
+                      <div className="flex space-x-1">
+                        <button 
+                          onClick={() => setViewMode('grid')}
+                          className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-green-100' : 'hover:bg-gray-100'}`}
+                        >
+                          <Grid size={16} />
+                        </button>
+                        <button 
+                          onClick={() => setViewMode('list')}
+                          className={`p-2 rounded-full ${viewMode === 'list' ? 'bg-green-100' : 'hover:bg-gray-100'}`}
+                        >
+                          <List size={16} />
+                        </button>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAddDrone}
+                        className="bg-green-600 text-white px-3 py-2 rounded-full flex items-center text-sm md:text-base"
                       >
-                        <Grid size={20} />
-                      </button>
-                      <button 
-                        onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-full ${viewMode === 'list' ? 'bg-green-100' : 'hover:bg-gray-100'}`}
-                      >
-                        <List size={20} />
-                      </button>
+                        <Plus className="mr-1 md:mr-2" /> Add Drone
+                      </motion.button>
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleAddDrone}
-                      className="bg-green-600 text-white px-4 py-2 rounded-full flex items-center"
-                    >
-                      <Plus className="mr-2" /> Add Drone
-                    </motion.button>
                   </div>
                 </div>
                 
                 {renderDroneView()}
                 
-                <div className="flex justify-end mt-6">
+                <div className="flex justify-end mt-4 md:mt-6">
                   <button 
                     onClick={() => setIsFleetManagementOpen(false)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-full"
+                    className="bg-green-600 text-white px-4 py-2 rounded-full text-sm md:text-base"
                   >
                     Close
                   </button>

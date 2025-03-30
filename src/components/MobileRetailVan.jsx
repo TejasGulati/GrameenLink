@@ -7,6 +7,7 @@ import {
   ShoppingCart, 
   Globe, 
   Star, 
+  BarChart2,
   RefreshCw, 
   Filter, 
   Search, 
@@ -26,13 +27,18 @@ import {
   Book,
   Banknote,
   Shield,
-  Smile
+  Smile,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
+import { useMediaQuery } from 'react-responsive';
 
 // Enhanced Product Categories with more specific descriptions
 const PRODUCT_CATEGORIES = [
@@ -104,6 +110,10 @@ function MobileRetailVan() {
   const [socialImpactData, setSocialImpactData] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [benefitsData, setBenefitsData] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isTablet = useMediaQuery({ minWidth: 769, maxWidth: 1024 });
 
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
@@ -134,7 +144,7 @@ function MobileRetailVan() {
         make: 'Tata Ace',
         model: 'Transformed Retail Van',
         registrationNumber: 'MH-12-AB-1234',
-        lastMaintenance: '2024-03-15'
+        lastMaintenance: new Date().toISOString().split('T')[0]
       },
       performanceMetrics: {
         salesThisMonth: '₹95,000',
@@ -174,7 +184,7 @@ function MobileRetailVan() {
         make: 'Mahindra Bolero',
         model: 'Community Service Van',
         registrationNumber: 'KA-23-CD-5678',
-        lastMaintenance: '2024-03-10'
+        lastMaintenance: new Date(Date.now() - 86400000 * 7).toISOString().split('T')[0]
       },
       performanceMetrics: {
         salesThisMonth: '₹75,000',
@@ -349,7 +359,7 @@ function MobileRetailVan() {
       mission: newVan.mission || 'Empowering Rural Communities',
       socialImpact: {
         farmersTrained: Math.floor(Math.random() * 50),
-        additionalIncomeFacilitated: `₹${(Math.floor(Math.random() * 50000) + 50000)}`,
+        additionalIncomeFacilitated: `₹${(Math.floor(Math.random() * 50000) + 50000).toLocaleString()}`,
         sustainabilityScore: +(Math.random() * 5).toFixed(1),
         healthAccess: Math.floor(Math.random() * 50),
         educationAccess: Math.floor(Math.random() * 40)
@@ -364,7 +374,7 @@ function MobileRetailVan() {
         lastMaintenance: new Date().toISOString().split('T')[0]
       },
       performanceMetrics: {
-        salesThisMonth: `₹${(Math.floor(Math.random() * 50000) + 50000)}`,
+        salesThisMonth: `₹${(Math.floor(Math.random() * 50000) + 50000).toLocaleString()}`,
         customerSatisfaction: +(Math.random() * 5).toFixed(1),
         routesCovered: Math.floor(Math.random() * 15) + 5,
         productsDelivered: Math.floor(Math.random() * 100) + 50,
@@ -404,6 +414,10 @@ function MobileRetailVan() {
     setIsEditModalOpen(true);
   };
 
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   const renderVanDetailsModal = () => {
     if (!selectedVan) return null;
 
@@ -412,35 +426,37 @@ function MobileRetailVan() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       >
         <motion.div
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
           exit={{ scale: 0.9 }}
-          className="bg-white rounded-xl p-12 w-full max-w-4xl overflow-y-auto max-h-[90vh]"
+          className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
         >
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-3xl font-bold text-gray-800 flex items-center">
-                <Truck className="mr-4 text-blue-600" /> 
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
+                <Truck className="mr-3 text-blue-600" size={24} /> 
                 {selectedVan.entrepreneur}'s Mobile Retail Van
               </h2>
-              <p className="text-xl text-gray-600 mt-2">{selectedVan.mission}</p>
+              <p className="text-lg text-gray-600 mt-1">{selectedVan.mission}</p>
             </div>
             <button 
               onClick={() => setIsVanDetailsModalOpen(false)}
-              className="text-gray-500 hover:text-gray-800"
+              className="text-gray-500 hover:text-gray-800 p-1"
             >
-              Close
+              <X size={24} />
             </button>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Van Details Card */}
-            <div className="bg-blue-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4 text-blue-800">Van Specifications</h3>
-              <div className="space-y-3">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-3 text-blue-800 flex items-center">
+                <Truck className="mr-2" size={18} /> Van Specifications
+              </h3>
+              <div className="space-y-2 text-sm">
                 <div><strong>Make:</strong> {selectedVan.vehicleDetails.make}</div>
                 <div><strong>Model:</strong> {selectedVan.vehicleDetails.model}</div>
                 <div><strong>Reg. Number:</strong> {selectedVan.vehicleDetails.registrationNumber}</div>
@@ -449,20 +465,24 @@ function MobileRetailVan() {
             </div>
 
             {/* Social Impact Card */}
-            <div className="bg-green-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4 text-green-800">Social Impact</h3>
-              <div className="space-y-3">
+            <div className="bg-green-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-3 text-green-800 flex items-center">
+                <Heart className="mr-2" size={18} /> Social Impact
+              </h3>
+              <div className="space-y-2 text-sm">
                 <div><strong>Farmers Trained:</strong> {selectedVan.socialImpact.farmersTrained}</div>
                 <div><strong>Additional Income:</strong> {selectedVan.socialImpact.additionalIncomeFacilitated}</div>
-                <div><strong>Health Services Provided:</strong> {selectedVan.socialImpact.healthAccess}</div>
+                <div><strong>Health Services:</strong> {selectedVan.socialImpact.healthAccess}</div>
                 <div><strong>Educational Services:</strong> {selectedVan.socialImpact.educationAccess}</div>
               </div>
             </div>
 
             {/* Performance Metrics Card */}
-            <div className="bg-purple-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-4 text-purple-800">Performance</h3>
-              <div className="space-y-3">
+            <div className="bg-purple-50 rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-3 text-purple-800 flex items-center">
+                <BarChart2 className="mr-2" size={18} /> Performance
+              </h3>
+              <div className="space-y-2 text-sm">
                 <div><strong>Monthly Sales:</strong> {selectedVan.performanceMetrics.salesThisMonth}</div>
                 <div><strong>Profit Margin:</strong> {selectedVan.performanceMetrics.profitMargin}</div>
                 <div><strong>Customer Satisfaction:</strong> {selectedVan.performanceMetrics.customerSatisfaction}/5</div>
@@ -472,56 +492,60 @@ function MobileRetailVan() {
           </div>
 
           {/* Benefits Section */}
-          <div className="mt-8 bg-yellow-50 rounded-xl p-6">
-            <h3 className="text-xl font-semibold mb-4 text-yellow-800">Community Benefits</h3>
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center mb-2">
-                  <RefreshCw className="text-blue-600 mr-2" size={18} />
-                  <strong>Time Saved</strong>
+          <div className="mb-6 bg-yellow-50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3 text-yellow-800 flex items-center">
+              <Smile className="mr-2" size={18} /> Community Benefits
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white rounded-md p-3 shadow-xs">
+                <div className="flex items-center mb-1">
+                  <RefreshCw className="text-blue-600 mr-2" size={16} />
+                  <strong className="text-sm">Time Saved</strong>
                 </div>
-                <div>{selectedVan.benefits.timeSaved}</div>
+                <div className="text-sm">{selectedVan.benefits.timeSaved}</div>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center mb-2">
-                  <Banknote className="text-green-600 mr-2" size={18} />
-                  <strong>Cost Reduction</strong>
+              <div className="bg-white rounded-md p-3 shadow-xs">
+                <div className="flex items-center mb-1">
+                  <Banknote className="text-green-600 mr-2" size={16} />
+                  <strong className="text-sm">Cost Reduction</strong>
                 </div>
-                <div>{selectedVan.benefits.costReduction}</div>
+                <div className="text-sm">{selectedVan.benefits.costReduction}</div>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center mb-2">
-                  <Package className="text-purple-600 mr-2" size={18} />
-                  <strong>Product Access</strong>
+              <div className="bg-white rounded-md p-3 shadow-xs">
+                <div className="flex items-center mb-1">
+                  <Package className="text-purple-600 mr-2" size={16} />
+                  <strong className="text-sm">Product Access</strong>
                 </div>
-                <div>{selectedVan.benefits.accessImproved}</div>
+                <div className="text-sm">{selectedVan.benefits.accessImproved}</div>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow-sm">
-                <div className="flex items-center mb-2">
-                  <Globe className="text-teal-600 mr-2" size={18} />
-                  <strong>Digital Inclusion</strong>
+              <div className="bg-white rounded-md p-3 shadow-xs">
+                <div className="flex items-center mb-1">
+                  <Globe className="text-teal-600 mr-2" size={16} />
+                  <strong className="text-sm">Digital Inclusion</strong>
                 </div>
-                <div>{selectedVan.benefits.digitalPayments}</div>
+                <div className="text-sm">{selectedVan.benefits.digitalPayments}</div>
               </div>
             </div>
           </div>
 
           {/* Route Details */}
-          <div className="mt-8 bg-gray-50 rounded-xl p-6">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">Today's Route</h3>
-            <div className="grid md:grid-cols-3 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800 flex items-center">
+              <MapPin className="mr-2" size={18} /> Today's Route
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {selectedVan.route.map((stop, index) => (
                 <div 
                   key={index} 
-                  className="bg-white rounded-lg p-4 shadow-md border"
+                  className="bg-white rounded-md p-3 shadow-xs border border-gray-100"
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <strong>{stop.point}</strong>
-                    <span className="text-sm text-gray-600">{stop.timestamp}</span>
+                    <strong className="text-sm">{stop.point}</strong>
+                    <span className="text-xs text-gray-600">{stop.timestamp}</span>
                   </div>
-                  <div className="text-sm text-gray-700">
+                  <div className="text-xs text-gray-700">
                     <strong>Services:</strong>
-                    <ul className="list-disc list-inside">
+                    <ul className="list-disc list-inside mt-1">
                       {stop.services.map((service, idx) => (
                         <li key={idx}>{service}</li>
                       ))}
@@ -537,107 +561,46 @@ function MobileRetailVan() {
   };
 
   const renderVanView = () => {
-    return viewMode === 'grid' ? (
-      <div className="grid md:grid-cols-3 gap-6">
-        {filteredVans.map((van) => (
-          <motion.div 
-            key={van.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all relative group"
-            onClick={() => {
-              setSelectedVan(van);
-              setIsVanDetailsModalOpen(true);
-            }}
-          >
-            <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditVan(van);
-                }}
-                className="bg-blue-100 text-blue-600 p-2 rounded-full hover:bg-blue-200"
-              >
-                <Edit size={16} />
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteVan(van.id);
-                }}
-                className="bg-red-100 text-red-600 p-2 rounded-full hover:bg-red-200"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">{van.entrepreneur}</h3>
-              <span 
-                className={`
-                  px-3 py-1 rounded-full text-xs
-                  ${van.status === 'Active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'}
-                `}
-              >
-                {van.status}
-              </span>
-            </div>
-            <div className="space-y-2">
-              <div><strong>Location:</strong> {van.location}</div>
-              <div><strong>Mission:</strong> {van.mission}</div>
-              <div className="flex items-center">
-                <Banknote className="mr-2 text-green-600" size={16} />
-                <strong>Impact:</strong> {van.socialImpact.additionalIncomeFacilitated}
-              </div>
-              <div className="flex items-center">
-                <Smile className="mr-2 text-blue-600" size={16} />
-                <strong>Satisfaction:</strong> {van.performanceMetrics.customerSatisfaction}/5
-              </div>
-              <div className="flex justify-between items-center mt-4">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full" 
-                    style={{ width: `${Math.min(van.performanceMetrics.productsDelivered, 100)}%` }}
-                  ></div>
-                </div>
-                <span className="ml-2 text-sm text-gray-600">
-                  {Math.min(van.performanceMetrics.productsDelivered, 100)}%
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    ) : (
-      <table className="w-full bg-white rounded-xl shadow-lg">
-        <thead>
-          <tr>
-            <th className="p-4 text-left">Entrepreneur</th>
-            <th className="p-4 text-left">Location</th>
-            <th className="p-4 text-left">Status</th>
-            <th className="p-4 text-left">Impact</th>
-            <th className="p-4 text-left">Revenue</th>
-            <th className="p-4 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+    if (viewMode === 'grid') {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredVans.map((van) => (
-            <tr 
-              key={van.id} 
-              className="border-t hover:bg-gray-50 cursor-pointer"
+            <motion.div 
+              key={van.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-all relative group"
               onClick={() => {
                 setSelectedVan(van);
                 setIsVanDetailsModalOpen(true);
               }}
             >
-              <td className="p-4">{van.entrepreneur}</td>
-              <td className="p-4">{van.location}</td>
-              <td className="p-4">
+              <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditVan(van);
+                  }}
+                  className="bg-blue-100 text-blue-600 p-1.5 rounded-full hover:bg-blue-200"
+                >
+                  <Edit size={14} />
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteVan(van.id);
+                  }}
+                  className="bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold truncate">{van.entrepreneur}</h3>
                 <span 
                   className={`
-                    px-3 py-1 rounded-full text-xs
+                    px-2 py-0.5 rounded-full text-xs
                     ${van.status === 'Active' 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-yellow-100 text-yellow-800'}
@@ -645,34 +608,108 @@ function MobileRetailVan() {
                 >
                   {van.status}
                 </span>
-              </td>
-              <td className="p-4">{van.socialImpact.additionalIncomeFacilitated}</td>
-              <td className="p-4">{van.performanceMetrics.salesThisMonth}</td>
-              <td className="p-4 flex space-x-2">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditVan(van);
-                  }}
-                  className="bg-blue-100 text-blue-600 p-2 rounded-full hover:bg-blue-200"
-                >
-                  <Edit size={16} />
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteVan(van.id);
-                  }}
-                  className="bg-red-100 text-red-600 p-2 rounded-full hover:bg-red-200"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </td>
-            </tr>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start">
+                  <MapPin className="flex-shrink-0 mt-0.5 mr-2 text-gray-500" size={16} />
+                  <span className="truncate">{van.location}</span>
+                </div>
+                <div className="flex items-start">
+                  <Target className="flex-shrink-0 mt-0.5 mr-2 text-gray-500" size={16} />
+                  <span className="line-clamp-2">{van.mission}</span>
+                </div>
+                <div className="flex items-center">
+                  <Banknote className="mr-2 text-green-600" size={16} />
+                  <span>Impact: {van.socialImpact.additionalIncomeFacilitated}</span>
+                </div>
+                <div className="flex items-center">
+                  <Smile className="mr-2 text-blue-600" size={16} />
+                  <span>Satisfaction: {van.performanceMetrics.customerSatisfaction}/5</span>
+                </div>
+                <div className="mt-3">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Progress</span>
+                    <span>{Math.min(van.performanceMetrics.productsDelivered, 100)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${Math.min(van.performanceMetrics.productsDelivered, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           ))}
-        </tbody>
-      </table>
-    );
+        </div>
+      );
+    } else {
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full bg-white rounded-lg shadow-md overflow-hidden">
+            <thead>
+              <tr className="bg-gray-50 text-left text-sm text-gray-600">
+                <th className="p-3">Entrepreneur</th>
+                <th className="p-3">Location</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Impact</th>
+                <th className="p-3">Revenue</th>
+                <th className="p-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredVans.map((van) => (
+                <tr 
+                  key={van.id} 
+                  className="border-t hover:bg-gray-50 cursor-pointer text-sm"
+                  onClick={() => {
+                    setSelectedVan(van);
+                    setIsVanDetailsModalOpen(true);
+                  }}
+                >
+                  <td className="p-3">{van.entrepreneur}</td>
+                  <td className="p-3">{van.location}</td>
+                  <td className="p-3">
+                    <span 
+                      className={`
+                        px-2 py-0.5 rounded-full text-xs
+                        ${van.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'}
+                      `}
+                    >
+                      {van.status}
+                    </span>
+                  </td>
+                  <td className="p-3">{van.socialImpact.additionalIncomeFacilitated}</td>
+                  <td className="p-3">{van.performanceMetrics.salesThisMonth}</td>
+                  <td className="p-3 flex space-x-1">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditVan(van);
+                      }}
+                      className="bg-blue-100 text-blue-600 p-1.5 rounded-full hover:bg-blue-200"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteVan(van.id);
+                      }}
+                      className="bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
   };
 
   const renderImpactComparisonModal = () => (
@@ -680,63 +717,63 @@ function MobileRetailVan() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         exit={{ scale: 0.9 }}
-        className="bg-white rounded-xl p-12 w-full max-w-4xl"
+        className="bg-white rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800 flex items-center">
-              <Info className="mr-4 text-blue-600" /> 
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <Info className="mr-3 text-blue-600" size={24} /> 
               Why Mobile Retail Vans?
             </h2>
-            <p className="text-xl text-gray-600 mt-2">Transforming rural economies through innovative distribution</p>
+            <p className="text-lg text-gray-600 mt-1">Transforming rural economies through innovative distribution</p>
           </div>
           <button 
             onClick={() => setIsImpactModalOpen(false)}
-            className="text-gray-500 hover:text-gray-800"
+            className="text-gray-500 hover:text-gray-800 p-1"
           >
-            Close
+            <X size={24} />
           </button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-blue-800">Key Advantages</h3>
-            <ul className="space-y-4">
+            <h3 className="text-lg font-semibold mb-3 text-blue-800">Key Advantages</h3>
+            <ul className="space-y-3">
               <li className="flex items-start">
-                <div className="bg-blue-100 p-2 rounded-full mr-4">
-                  <Truck className="text-blue-600" size={20} />
+                <div className="bg-blue-100 p-2 rounded-full mr-3">
+                  <Truck className="text-blue-600" size={18} />
                 </div>
-                <div>
+                <div className="text-sm">
                   <strong>Last-Mile Connectivity:</strong> Reaches remote areas traditional retail can't
                 </div>
               </li>
               <li className="flex items-start">
-                <div className="bg-green-100 p-2 rounded-full mr-4">
-                  <Banknote className="text-green-600" size={20} />
+                <div className="bg-green-100 p-2 rounded-full mr-3">
+                  <Banknote className="text-green-600" size={18} />
                 </div>
-                <div>
+                <div className="text-sm">
                   <strong>Economic Empowerment:</strong> Creates rural entrepreneurs with 30-50% higher earnings
                 </div>
               </li>
               <li className="flex items-start">
-                <div className="bg-purple-100 p-2 rounded-full mr-4">
-                  <Heart className="text-purple-600" size={20} />
+                <div className="bg-purple-100 p-2 rounded-full mr-3">
+                  <Heart className="text-purple-600" size={18} />
                 </div>
-                <div>
+                <div className="text-sm">
                   <strong>Health & Education:</strong> Delivers essential services to underserved communities
                 </div>
               </li>
               <li className="flex items-start">
-                <div className="bg-yellow-100 p-2 rounded-full mr-4">
-                  <Leaf className="text-yellow-600" size={20} />
+                <div className="bg-yellow-100 p-2 rounded-full mr-3">
+                  <Leaf className="text-yellow-600" size={18} />
                 </div>
-                <div>
+                <div className="text-sm">
                   <strong>Sustainable Model:</strong> Combines profitability with social impact
                 </div>
               </li>
@@ -744,7 +781,7 @@ function MobileRetailVan() {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-blue-800">Impact Comparison</h3>
+            <h3 className="text-lg font-semibold mb-3 text-blue-800">Impact Comparison</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={IMPACT_COMPARISON}>
@@ -760,20 +797,20 @@ function MobileRetailVan() {
           </div>
         </div>
 
-        <div className="mt-8 bg-blue-50 rounded-xl p-6">
-          <h3 className="text-xl font-semibold mb-4 text-blue-800">Rural Transformation Metrics</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-blue-600 mb-2">3-5x</div>
-              <div>Increase in product accessibility</div>
+        <div className="bg-blue-50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-3 text-blue-800">Rural Transformation Metrics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-white rounded-md p-3 text-center">
+              <div className="text-xl font-bold text-blue-600 mb-1">3-5x</div>
+              <div className="text-xs">Increase in product accessibility</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-green-600 mb-2">25-40%</div>
-              <div>Reduction in consumer prices</div>
+            <div className="bg-white rounded-md p-3 text-center">
+              <div className="text-xl font-bold text-green-600 mb-1">25-40%</div>
+              <div className="text-xs">Reduction in consumer prices</div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="text-2xl font-bold text-purple-600 mb-2">60-80%</div>
-              <div>Of rural households served regularly</div>
+            <div className="bg-white rounded-md p-3 text-center">
+              <div className="text-xl font-bold text-purple-600 mb-1">60-80%</div>
+              <div className="text-xs">Of rural households served regularly</div>
             </div>
           </div>
         </div>
@@ -786,101 +823,177 @@ function MobileRetailVan() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-8"
+      className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-4 md:p-6 lg:p-8"
     >
-      <div className="container mx-auto mt-20">
+      <div className="max-w-7xl mx-auto">
         {/* Header with search and add van button */}
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="flex justify-between items-center mb-8"
-        >
+          className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 mt-12 p-6"
+          >
           <div>
-            <h1 className="text-4xl font-bold text-gray-800 flex items-center">
-              <Truck className="mr-4 text-blue-600" /> Mobile Retail Vans
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
+              <Truck className="mr-3 text-blue-600" size={24} /> Mobile Retail Vans
             </h1>
-            <p className="text-gray-600 mt-2">Bridging the rural-urban divide through mobile commerce</p>
+            <p className="text-gray-600 mt-1 text-sm md:text-base">Bridging the rural-urban divide through mobile commerce</p>
           </div>
-          <div className="flex space-x-4">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="relative w-full">
               <input 
                 type="text"
                 placeholder="Search vans..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-full w-64"
+                className="pl-10 pr-4 py-2 border rounded-full w-full text-sm"
               />
-              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
             </div>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsCreateVanModalOpen(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center"
-            >
-              <Plus className="mr-2" /> Add New Van
-            </motion.button>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsImpactModalOpen(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition flex items-center"
-            >
-              <Info className="mr-2" /> Why MRVs?
-            </motion.button>
+            <div className="flex gap-2">
+              <motion.button 
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setIsCreateVanModalOpen(true)}
+                className="bg-blue-600 text-white px-3 py-2 rounded-full hover:bg-blue-700 transition flex items-center text-sm whitespace-nowrap"
+              >
+                <Plus className="mr-1" size={16} /> Add Van
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setIsImpactModalOpen(true)}
+                className="bg-green-600 text-white px-3 py-2 rounded-full hover:bg-green-700 transition flex items-center text-sm whitespace-nowrap"
+              >
+                <Info className="mr-1" size={16} /> Why MRVs?
+              </motion.button>
+              {isMobile && (
+                <motion.button 
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={toggleMobileMenu}
+                  className="bg-gray-200 text-gray-700 px-3 py-2 rounded-full hover:bg-gray-300 transition flex items-center text-sm"
+                >
+                  {mobileMenuOpen ? (
+                    <ChevronUp className="mr-1" size={16} />
+                  ) : (
+                    <ChevronDown className="mr-1" size={16} />
+                  )}
+                  Menu
+                </motion.button>
+              )}
+            </div>
           </div>
         </motion.div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && isMobile && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-lg shadow-md overflow-hidden mb-6"
+            >
+              <div className="p-3 flex flex-wrap gap-2">
+                {['All', 'Active', 'Maintenance'].map((statusFilter) => (
+                  <button 
+                    key={statusFilter}
+                    className={`
+                      px-3 py-1 rounded-full text-xs font-medium
+                      ${filter === statusFilter 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                    `}
+                    onClick={() => {
+                      setFilter(statusFilter);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    {statusFilter}
+                  </button>
+                ))}
+              </div>
+              <div className="border-t p-3 flex justify-center gap-4">
+                <button 
+                  onClick={() => {
+                    setViewMode('grid');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`
+                    p-2 rounded-full
+                    ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}
+                  `}
+                >
+                  <Grid size={18} />
+                </button>
+                <button 
+                  onClick={() => {
+                    setViewMode('list');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`
+                    p-2 rounded-full
+                    ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}
+                  `}
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* System Overview Cards */}
         <motion.div 
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid md:grid-cols-5 gap-6 mb-8 w-full"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6"
         >
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Truck className="text-blue-600 mr-3" />
-              <h3 className="text-xl font-semibold">Total Vans</h3>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center mb-2">
+              <Truck className="text-blue-600 mr-2" size={18} />
+              <h3 className="text-sm font-medium">Total Vans</h3>
             </div>
-            <div className="text-4xl font-bold text-gray-800">
+            <div className="text-2xl font-bold text-gray-800">
               {systemStats.totalVans}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Users className="text-green-600 mr-3" />
-              <h3 className="text-xl font-semibold">Active Vans</h3>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center mb-2">
+              <Users className="text-green-600 mr-2" size={18} />
+              <h3 className="text-sm font-medium">Active Vans</h3>
             </div>
-            <div className="text-4xl font-bold text-gray-800">
+            <div className="text-2xl font-bold text-gray-800">
               {systemStats.activeVans}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <ShoppingCart className="text-purple-600 mr-3" />
-              <h3 className="text-xl font-semibold">Villages Reached</h3>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center mb-2">
+              <ShoppingCart className="text-purple-600 mr-2" size={18} />
+              <h3 className="text-sm font-medium">Villages Reached</h3>
             </div>
-            <div className="text-4xl font-bold text-purple-800">
+            <div className="text-2xl font-bold text-purple-800">
               {systemStats.villagesReached}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Banknote className="text-yellow-600 mr-3" />
-              <h3 className="text-xl font-semibold">Income Generated</h3>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center mb-2">
+              <Banknote className="text-yellow-600 mr-2" size={18} />
+              <h3 className="text-sm font-medium">Income Generated</h3>
             </div>
-            <div className="text-4xl font-bold text-green-800">
+            <div className="text-2xl font-bold text-green-800">
               ₹{systemStats.incomeGenerated.toLocaleString()}
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center mb-4">
-              <Leaf className="text-teal-600 mr-3" />
-              <h3 className="text-xl font-semibold">Farmers Trained</h3>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center mb-2">
+              <Leaf className="text-teal-600 mr-2" size={18} />
+              <h3 className="text-sm font-medium">Farmers Trained</h3>
             </div>
-            <div className="text-4xl font-bold text-teal-800">
+            <div className="text-2xl font-bold text-teal-800">
               {systemStats.farmersTrained}
             </div>
           </div>
@@ -891,12 +1004,12 @@ function MobileRetailVan() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="grid md:grid-cols-2 gap-8 mb-8"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"
         >
           {/* Product Distribution Pie Chart */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Package className="mr-2 text-blue-600" /> Product Distribution
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <Package className="mr-2 text-blue-600" size={18} /> Product Distribution
             </h3>
             {productDistributionData.length > 0 ? (
               <div className="h-64">
@@ -926,6 +1039,7 @@ function MobileRetailVan() {
                       layout="horizontal" 
                       verticalAlign="bottom" 
                       align="center"
+                      wrapperStyle={{ fontSize: '12px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -935,24 +1049,26 @@ function MobileRetailVan() {
                 No product distribution data available
               </div>
             )}
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               {productDistributionData.map((product, index) => (
-                <div key={index} className="flex items-center text-sm">
+                <div key={index} className="flex items-start">
                   <div 
-                    className="w-3 h-3 rounded-full mr-2" 
+                    className="w-3 h-3 rounded-full mt-0.5 mr-2 flex-shrink-0" 
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="truncate">{product.name}:</span>
-                  <span className="font-medium ml-1">{product.impact}</span>
+                  <div>
+                    <div className="font-medium">{product.name}</div>
+                    <div className="text-gray-600 text-xs">{product.impact}</div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Performance Metrics Bar Chart */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <BarChart className="mr-2 text-green-600" /> Van Performance
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <BarChart2 className="mr-2 text-green-600" size={18} /> Van Performance
             </h3>
             {performanceChartData.length > 0 ? (
               <div className="h-64">
@@ -963,7 +1079,7 @@ function MobileRetailVan() {
                     <YAxis yAxisId="left" orientation="left" />
                     <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
                     <Bar yAxisId="left" dataKey="sales" name="Sales (₹)" fill="#8884d8" />
                     <Bar yAxisId="right" dataKey="profit" name="Profit Margin (%)" fill="#82ca9d" />
                   </BarChart>
@@ -974,75 +1090,8 @@ function MobileRetailVan() {
                 No performance data available
               </div>
             )}
-            <div className="mt-4 text-sm text-gray-600">
+            <div className="mt-3 text-sm text-gray-600">
               <strong>Key Insight:</strong> Mobile retail vans achieve 25-35% profit margins while creating social impact
-            </div>
-          </div>
-
-          {/* Social Impact Bar Chart */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Users className="mr-2 text-purple-600" /> Social Impact
-            </h3>
-            {socialImpactData.length > 0 ? (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={socialImpactData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                No social impact data available
-              </div>
-            )}
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {socialImpactData.map((impact, index) => (
-                <div key={index} className="flex items-center text-sm">
-                  <impact.icon className="mr-2" size={16} />
-                  <span>{impact.name}:</span>
-                  <span className="font-medium ml-1">
-                    {impact.name.includes('Income') ? '₹' : ''}
-                    {impact.value.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Revenue vs Impact Chart */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Globe className="mr-2 text-green-600" /> Revenue vs Social Impact
-            </h3>
-            {revenueData.length > 0 ? (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis yAxisId="left" orientation="left" />
-                    <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="revenue" name="Revenue (₹)" fill="#0088FE" />
-                    <Bar yAxisId="right" dataKey="impact" name="Social Impact (₹)" fill="#00C49F" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                No revenue data available
-              </div>
-            )}
-            <div className="mt-4 text-sm text-gray-600">
-              <strong>Key Insight:</strong> Every ₹1 in revenue generates ₹0.60-0.80 in community impact
             </div>
           </div>
         </motion.div>
@@ -1052,47 +1101,51 @@ function MobileRetailVan() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8 min-h-[600px]"
+          className="bg-white rounded-lg shadow-sm p-4 mb-6"
         >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800">Mobile Retail Vans</h2>
-            <div className="flex space-x-4">
-              <div className="flex space-x-2 mr-4">
-                {['All', 'Active', 'Maintenance'].map((statusFilter) => (
+<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3 mt-12 p-6">
+            <h2 className="text-xl font-semibold text-gray-800">Mobile Retail Vans</h2>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              {!isMobile && (
+                <div className="flex gap-2">
+                  {['All', 'Active', 'Maintenance'].map((statusFilter) => (
+                    <button 
+                      key={statusFilter}
+                      className={`
+                        px-3 py-1 rounded-full text-xs font-medium
+                        ${filter === statusFilter 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                      `}
+                      onClick={() => setFilter(statusFilter)}
+                    >
+                      {statusFilter}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!isMobile && (
+                <div className="flex gap-2">
                   <button 
-                    key={statusFilter}
+                    onClick={() => setViewMode('grid')}
                     className={`
-                      px-3 py-1 rounded-full text-sm font-medium
-                      ${filter === statusFilter 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                      p-2 rounded-full
+                      ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}
                     `}
-                    onClick={() => setFilter(statusFilter)}
                   >
-                    {statusFilter}
+                    <Grid size={18} />
                   </button>
-                ))}
-              </div>
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`
-                    p-2 rounded-full
-                    ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}
-                  `}
-                >
-                  <Grid size={20} />
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={`
-                    p-2 rounded-full
-                    ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}
-                  `}
-                >
-                  <List size={20} />
-                </button>
-              </div>
+                  <button 
+                    onClick={() => setViewMode('list')}
+                    className={`
+                      p-2 rounded-full
+                      ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}
+                    `}
+                  >
+                    <List size={18} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           
@@ -1100,14 +1153,14 @@ function MobileRetailVan() {
             renderVanView()
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <Truck size={48} className="mb-4" />
+              <Truck size={40} className="mb-3" />
               <p>No vans match your search criteria</p>
               <button 
                 onClick={() => {
                   setFilter('All');
                   setSearchTerm('');
                 }}
-                className="mt-4 text-blue-600 hover:underline"
+                className="mt-3 text-blue-600 hover:underline text-sm"
               >
                 Reset filters
               </button>
@@ -1122,62 +1175,80 @@ function MobileRetailVan() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
               <motion.div
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.9 }}
-                className="bg-white rounded-xl p-12 mt-12 w-full max-w-lg"
+                className="bg-white rounded-xl p-6 w-full max-w-md"
               >
-                <h2 className="text-2xl font-bold mb-6 flex items-center">
-                  <Plus className="mr-2 text-blue-600" /> Add New Mobile Retail Van
+                <h2 className="text-xl font-bold mb-4 flex items-center">
+                  <Plus className="mr-2 text-blue-600" size={20} /> Add New Mobile Retail Van
                 </h2>
-                <div className="space-y-4">
-                  <input 
-                    type="text"
-                    placeholder="Entrepreneur Name"
-                    value={newVan.entrepreneurName}
-                    onChange={(e) => setNewVan({...newVan, entrepreneurName: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Contact Number"
-                    value={newVan.contactNumber}
-                    onChange={(e) => setNewVan({...newVan, contactNumber: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Van Location"
-                    value={newVan.location}
-                    onChange={(e) => setNewVan({...newVan, location: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Mission Statement"
-                    value={newVan.mission}
-                    onChange={(e) => setNewVan({...newVan, mission: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Vehicle Make"
-                    value={newVan.vehicleMake}
-                    onChange={(e) => setNewVan({...newVan, vehicleMake: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Registration Number"
-                    value={newVan.registrationNumber}
-                    onChange={(e) => setNewVan({...newVan, registrationNumber: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                  />
+                <div className="space-y-3">
                   <div>
-                    <label className="block mb-2">Van Specialties</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Entrepreneur Name</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter name"
+                      value={newVan.entrepreneurName}
+                      onChange={(e) => setNewVan({...newVan, entrepreneurName: e.target.value})}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter phone number"
+                      value={newVan.contactNumber}
+                      onChange={(e) => setNewVan({...newVan, contactNumber: e.target.value})}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Van Location</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter location"
+                      value={newVan.location}
+                      onChange={(e) => setNewVan({...newVan, location: e.target.value})}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mission Statement</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter mission"
+                      value={newVan.mission}
+                      onChange={(e) => setNewVan({...newVan, mission: e.target.value})}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Make</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter make"
+                      value={newVan.vehicleMake}
+                      onChange={(e) => setNewVan({...newVan, vehicleMake: e.target.value})}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter registration"
+                      value={newVan.registrationNumber}
+                      onChange={(e) => setNewVan({...newVan, registrationNumber: e.target.value})}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Van Specialties</label>
                     <div className="flex flex-wrap gap-2">
                       {PRODUCT_CATEGORIES.map((category) => (
                         <button
@@ -1193,28 +1264,28 @@ function MobileRetailVan() {
                             });
                           }}
                           className={`
-                            px-3 py-1 rounded-full text-sm flex items-center
+                            px-2 py-1 rounded-full text-xs flex items-center
                             ${newVan.specialties.includes(category.name) 
                               ? 'bg-blue-600 text-white' 
                               : 'bg-gray-200 text-gray-700'}
                           `}
                         >
-                          <category.icon className="mr-2" size={16} />
+                          <category.icon className="mr-1" size={14} />
                           {category.name}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="flex justify-end space-x-4">
+                  <div className="flex justify-end gap-3 pt-2">
                     <button 
                       onClick={() => setIsCreateVanModalOpen(false)}
-                      className="px-4 py-2 border rounded-full"
+                      className="px-4 py-2 border rounded-full text-sm"
                     >
                       Cancel
                     </button>
                     <button 
                       onClick={handleCreateVan}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-full"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm"
                     >
                       Add Van
                     </button>
@@ -1232,86 +1303,104 @@ function MobileRetailVan() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
               <motion.div
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.9 }}
-                className="bg-white rounded-xl p-12 mt-12 w-full max-w-lg"
+                className="bg-white rounded-xl p-6 w-full max-w-md"
               >
-                <h2 className="text-2xl font-bold mb-6 flex items-center">
-                  <Edit className="mr-2 text-blue-600" /> Edit Mobile Retail Van
+                <h2 className="text-xl font-bold mb-4 flex items-center">
+                  <Edit className="mr-2 text-blue-600" size={20} /> Edit Mobile Retail Van
                 </h2>
-                <div className="space-y-4">
-                  <input 
-                    type="text"
-                    placeholder="Entrepreneur Name"
-                    value={selectedVan.entrepreneur}
-                    onChange={(e) => setSelectedVan({
-                      ...selectedVan, 
-                      entrepreneur: e.target.value
-                    })}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Contact Number"
-                    value={selectedVan.contactNumber}
-                    onChange={(e) => setSelectedVan({
-                      ...selectedVan, 
-                      contactNumber: e.target.value
-                    })}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Van Location"
-                    value={selectedVan.location}
-                    onChange={(e) => setSelectedVan({
-                      ...selectedVan, 
-                      location: e.target.value
-                    })}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Mission Statement"
-                    value={selectedVan.mission}
-                    onChange={(e) => setSelectedVan({
-                      ...selectedVan, 
-                      mission: e.target.value
-                    })}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Vehicle Make"
-                    value={selectedVan.vehicleDetails.make}
-                    onChange={(e) => setSelectedVan({
-                      ...selectedVan, 
-                      vehicleDetails: {
-                        ...selectedVan.vehicleDetails,
-                        make: e.target.value
-                      }
-                    })}
-                    className="w-full p-2 border rounded-lg"
-                  />
-                  <input 
-                    type="text"
-                    placeholder="Registration Number"
-                    value={selectedVan.vehicleDetails.registrationNumber}
-                    onChange={(e) => setSelectedVan({
-                      ...selectedVan, 
-                      vehicleDetails: {
-                        ...selectedVan.vehicleDetails,
-                        registrationNumber: e.target.value
-                      }
-                    })}
-                    className="w-full p-2 border rounded-lg"
-                  />
+                <div className="space-y-3">
                   <div>
-                    <label className="block mb-2">Van Specialties</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Entrepreneur Name</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter name"
+                      value={selectedVan.entrepreneur}
+                      onChange={(e) => setSelectedVan({
+                        ...selectedVan, 
+                        entrepreneur: e.target.value
+                      })}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter phone number"
+                      value={selectedVan.contactNumber}
+                      onChange={(e) => setSelectedVan({
+                        ...selectedVan, 
+                        contactNumber: e.target.value
+                      })}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Van Location</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter location"
+                      value={selectedVan.location}
+                      onChange={(e) => setSelectedVan({
+                        ...selectedVan, 
+                        location: e.target.value
+                      })}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mission Statement</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter mission"
+                      value={selectedVan.mission}
+                      onChange={(e) => setSelectedVan({
+                        ...selectedVan, 
+                        mission: e.target.value
+                      })}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Make</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter make"
+                      value={selectedVan.vehicleDetails.make}
+                      onChange={(e) => setSelectedVan({
+                        ...selectedVan, 
+                        vehicleDetails: {
+                          ...selectedVan.vehicleDetails,
+                          make: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+                    <input 
+                      type="text"
+                      placeholder="Enter registration"
+                      value={selectedVan.vehicleDetails.registrationNumber}
+                      onChange={(e) => setSelectedVan({
+                        ...selectedVan, 
+                        vehicleDetails: {
+                          ...selectedVan.vehicleDetails,
+                          registrationNumber: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Van Specialties</label>
                     <div className="flex flex-wrap gap-2">
                       {PRODUCT_CATEGORIES.map((category) => (
                         <button
@@ -1327,22 +1416,22 @@ function MobileRetailVan() {
                             });
                           }}
                           className={`
-                            px-3 py-1 rounded-full text-sm flex items-center
+                            px-2 py-1 rounded-full text-xs flex items-center
                             ${selectedVan.specialties.includes(category.name) 
                               ? 'bg-blue-600 text-white' 
                               : 'bg-gray-200 text-gray-700'}
                           `}
                         >
-                          <category.icon className="mr-2" size={16} />
+                          <category.icon className="mr-1" size={14} />
                           {category.name}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="flex justify-end space-x-4">
+                  <div className="flex justify-end gap-3 pt-2">
                     <button 
                       onClick={() => setIsEditModalOpen(false)}
-                      className="px-4 py-2 border rounded-full"
+                      className="px-4 py-2 border rounded-full text-sm"
                     >
                       Cancel
                     </button>
@@ -1354,7 +1443,7 @@ function MobileRetailVan() {
                         setMobileVans(updatedVans);
                         setIsEditModalOpen(false);
                       }}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-full"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm"
                     >
                       Save Changes
                     </button>

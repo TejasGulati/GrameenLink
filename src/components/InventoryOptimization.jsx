@@ -1,3 +1,4 @@
+// InventoryOptimization.js
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Warehouse, Package, Truck, TrendingUp, TrendingDown, RefreshCw, 
@@ -10,6 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
+import { useAuth } from '../context/AuthContext';
 
 // Local storage keys
 const STORAGE_KEYS = {
@@ -123,6 +125,8 @@ const INITIAL_INVENTORY_ITEMS = [
 ];
 
 function InventoryOptimization() {
+  const { user } = useAuth();
+  
   // Load data from localStorage or use initial mock data
   const [warehouses, setWarehouses] = useState(() => {
     const savedWarehouses = localStorage.getItem(STORAGE_KEYS.WAREHOUSES);
@@ -227,7 +231,7 @@ function InventoryOptimization() {
       return warehouses.map(warehouse => ({
         name: warehouse.name,
         capacity: parseInt(warehouse.storageCapacity) || 100,
-        used: Math.min((warehouse.stockItems / parseInt(warehouse.storageCapacity || 1)) * 100, 100),
+        used: Math.min((warehouse.stockItems / parseInt(warehouse.storageCapacity || 1)) * 100),
         health: Math.min(warehouse.healthScore || 0, 100),
         climateResilient: warehouse.ruralImpact.climateResilient ? 100 : 0,
         villagesServed: warehouse.ruralImpact.villagesServed
@@ -442,21 +446,44 @@ function InventoryOptimization() {
   };
 
   const renderInventoryView = () => {
+    if (filteredItems.length === 0) {
+      return (
+        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <Package className="mx-auto text-gray-400 mb-4" size={48} />
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Inventory Items Found</h3>
+          <p className="text-gray-500 mb-4">
+            {searchTerm ? 'No items match your search criteria' : 'Your inventory is currently empty'}
+          </p>
+          <button
+            onClick={() => {
+              setEditMode(false);
+              setIsCreateItemOpen(true);
+              setSearchTerm('');
+              setFilter('All');
+            }}
+            className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition flex items-center mx-auto"
+          >
+            <Plus className="mr-2" /> Add New Item
+          </button>
+        </div>
+      );
+    }
+
     return viewMode === 'grid' ? (
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredItems.map((item) => (
           <motion.div 
             key={item.id}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all border border-gray-200"
+            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-all border border-gray-200"
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">{item.name}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold">{item.name}</h3>
               <span 
                 className={`
-                  px-3 py-1 rounded-full text-xs
+                  px-2 sm:px-3 py-1 rounded-full text-xs
                   ${item.trend === 'increasing' 
                     ? 'bg-green-100 text-green-800' 
                     : item.trend === 'decreasing'
@@ -468,7 +495,7 @@ function InventoryOptimization() {
               </span>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 text-sm sm:text-base">
               <div><strong>Category:</strong> {item.category}</div>
               <div><strong>Quantity:</strong> {item.quantity} {item.unit}</div>
               <div><strong>Warehouse:</strong> {item.warehouse}</div>
@@ -570,7 +597,7 @@ function InventoryOptimization() {
               {['ID', 'Name', 'Category', 'Quantity', 'Warehouse', 'Supplier', 'Rural Impact', 'Actions'].map((header) => (
                 <th 
                   key={header} 
-                  className="p-3 text-left cursor-pointer hover:bg-gray-200"
+                  className="p-3 text-left text-sm sm:text-base cursor-pointer hover:bg-gray-200"
                   onClick={() => {
                     const isAsc = sortConfig.direction === 'asc';
                     setSortConfig({
@@ -579,10 +606,12 @@ function InventoryOptimization() {
                     });
                   }}
                 >
-                  {header}
-                  {sortConfig.key === header.toLowerCase().replace(' ', '') && (
-                    sortConfig.direction === 'asc' ? <ChevronUp className="inline ml-1" size={16} /> : <ChevronDown className="inline ml-1" size={16} />
-                  )}
+                  <div className="flex items-center">
+                    {header}
+                    {sortConfig.key === header.toLowerCase().replace(' ', '') && (
+                      sortConfig.direction === 'asc' ? <ChevronUp className="ml-1" size={16} /> : <ChevronDown className="ml-1" size={16} />
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
@@ -590,15 +619,15 @@ function InventoryOptimization() {
           <tbody>
             {filteredItems.map((item) => (
               <tr key={item.id} className="border-b hover:bg-gray-50 transition-colors">
-                <td className="p-3">{item.id}</td>
-                <td className="p-3 font-medium">{item.name}</td>
-                <td className="p-3">{item.category}</td>
-                <td className="p-3">{item.quantity} {item.unit}</td>
-                <td className="p-3">{item.warehouse}</td>
-                <td className="p-3">{item.supplier}</td>
+                <td className="p-3 text-sm sm:text-base">{item.id}</td>
+                <td className="p-3 font-medium text-sm sm:text-base">{item.name}</td>
+                <td className="p-3 text-sm sm:text-base">{item.category}</td>
+                <td className="p-3 text-sm sm:text-base">{item.quantity} {item.unit}</td>
+                <td className="p-3 text-sm sm:text-base">{item.warehouse}</td>
+                <td className="p-3 text-sm sm:text-base">{item.supplier}</td>
                 <td className="p-3">
                   {item.ruralBenefits?.farmerIncomeImpact && (
-                    <div className="flex items-center text-green-700">
+                    <div className="flex items-center text-green-700 text-sm sm:text-base">
                       <Zap className="mr-1" size={14} />
                       <span>{item.ruralBenefits.farmerIncomeImpact}</span>
                     </div>
@@ -611,13 +640,13 @@ function InventoryOptimization() {
                       setEditMode(true);
                       setIsCreateItemOpen(true);
                     }}
-                    className="text-blue-600 hover:bg-blue-50 p-2 rounded-full"
+                    className="text-blue-600 hover:bg-blue-50 p-1 sm:p-2 rounded-full"
                   >
                     <Edit size={18} />
                   </button>
                   <button 
                     onClick={() => handleDeleteInventoryItem(item.id)}
-                    className="text-red-600 hover:bg-red-50 p-2 rounded-full"
+                    className="text-red-600 hover:bg-red-50 p-1 sm:p-2 rounded-full"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -635,21 +664,21 @@ function InventoryOptimization() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 md:p-8"
+      className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4 sm:p-6"
     >
-      <div className="container mx-auto mt-12 pt-10">
+      <div className="max-w-7xl mx-auto mt-12 pt-10">
         {/* Header */}
         <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex items-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 flex items-center">
               <Warehouse className="mr-3 text-blue-600" /> 
-              <span>Rural Inventory Optimization System</span>
+              <span>Rural Inventory Optimization</span>
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
               Bridging profit with social impact through intelligent inventory management
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -657,17 +686,17 @@ function InventoryOptimization() {
                 setEditMode(false);
                 setIsCreateItemOpen(true);
               }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center text-sm md:text-base"
+              className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center text-xs sm:text-sm md:text-base"
             >
-              <Plus className="mr-2" /> Add Inventory
+              <Plus className="mr-1 sm:mr-2" /> Add Inventory
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsWarehouseManagementOpen(true)}
-              className="border border-blue-600 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-50 transition flex items-center text-sm md:text-base"
+              className="border border-blue-600 text-blue-600 px-3 sm:px-4 py-2 rounded-full hover:bg-blue-50 transition flex items-center text-xs sm:text-sm md:text-base"
             >
-              <Warehouse className="mr-2" /> Manage Warehouses
+              <Warehouse className="mr-1 sm:mr-2" /> Manage Warehouses
             </motion.button>
           </div>
         </header>
@@ -677,61 +706,61 @@ function InventoryOptimization() {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-8 border border-gray-200"
         >
-          <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-800">
             Why Our System Beats Traditional Rural Inventory Management
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
-                icon: <Activity className="text-green-600 w-8 h-8 mb-3" />,
+                icon: <Activity className="text-green-600 w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3" />,
                 title: "Real-Time Visibility",
-                description: "Traditional methods rely on manual counts and paper records. Our system provides live inventory tracking across all rural hubs, reducing stockouts by 65%.",
+                description: "Traditional methods rely on manual counts. Our system provides live inventory tracking across all rural hubs.",
                 impact: "Farmers get critical supplies when needed"
               },
               {
-                icon: <Thermometer className="text-blue-600 w-8 h-8 mb-3" />,
+                icon: <Thermometer className="text-blue-600 w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3" />,
                 title: "Climate-Adaptive",
-                description: "Seasonal demand forecasting prevents waste of perishable goods and ensures availability of climate-appropriate items.",
+                description: "Seasonal demand forecasting prevents waste of perishable goods and ensures availability.",
                 impact: "Reduces agricultural losses by 30-40%"
               },
               {
-                icon: <Users className="text-purple-600 w-8 h-8 mb-3" />,
+                icon: <Users className="text-purple-600 w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3" />,
                 title: "Community-Centric",
-                description: "Tracks impact metrics like farmers served and villages reached, aligning business goals with social impact.",
+                description: "Tracks impact metrics like farmers served and villages reached.",
                 impact: "Demonstrates CSR value to stakeholders"
               },
               {
-                icon: <RefreshCw className="text-yellow-600 w-8 h-8 mb-3" />,
+                icon: <RefreshCw className="text-yellow-600 w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3" />,
                 title: "Automated Replenishment",
-                description: "Smart algorithms account for rural logistics delays, automatically triggering orders before critical thresholds are reached.",
+                description: "Smart algorithms account for rural logistics delays, triggering orders automatically.",
                 impact: "Eliminates 80% of emergency shipments"
               },
               {
-                icon: <Globe className="text-red-600 w-8 h-8 mb-3" />,
+                icon: <Globe className="text-red-600 w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3" />,
                 title: "Last-Mile Optimization",
-                description: "Integrates with rural delivery networks (bicycles, tractors) to minimize transportation costs for remote areas.",
+                description: "Integrates with rural delivery networks to minimize transportation costs.",
                 impact: "Cuts delivery costs by 45%"
               },
               {
-                icon: <Heart className="text-pink-600 w-8 h-8 mb-3" />,
+                icon: <Heart className="text-pink-600 w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3" />,
                 title: "Social Impact Dashboard",
-                description: "Quantifies benefits like farmer income increases and water savings, making impact measurable and reportable.",
+                description: "Quantifies benefits like farmer income increases and water savings.",
                 impact: "Attracts impact investors and grants"
               }
             ].map((feature, index) => (
               <motion.div 
                 key={index}
                 whileHover={{ y: -5 }}
-                className="bg-gray-50 rounded-lg p-6 border border-gray-200"
+                className="bg-gray-50 rounded-lg p-4 sm:p-6 border border-gray-200"
               >
                 <div className="flex flex-col items-center text-center">
                   {feature.icon}
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-gray-600 mb-3">{feature.description}</p>
-                  <div className="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                  <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3">{feature.description}</p>
+                  <div className="text-xs sm:text-sm bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full">
                     {feature.impact}
                   </div>
                 </div>
@@ -745,45 +774,45 @@ function InventoryOptimization() {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid md:grid-cols-4 gap-4 mb-8"
+          className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8"
         >
           {[
             { 
-              icon: <Package className="text-blue-600 mr-3" />, 
-              title: 'Total Items', 
+              icon: <Package className="text-blue-600 mr-1 sm:mr-2" size={16} />, 
+              title: 'Items', 
               value: systemStats.totalInventoryItems,
               trend: '+12%'
             },
             { 
-              icon: <Warehouse className="text-green-600 mr-3" />, 
+              icon: <Warehouse className="text-green-600 mr-1 sm:mr-2" size={16} />, 
               title: 'Warehouses', 
               value: systemStats.totalWarehouses,
               trend: '+2 new'
             },
             { 
-              icon: <TrendingUp className="text-purple-600 mr-3" />, 
+              icon: <TrendingUp className="text-purple-600 mr-1 sm:mr-2" size={16} />, 
               title: 'Stock Value', 
               value: `₹${systemStats.stockValueEstimate.toLocaleString()}`,
               trend: '↑15%'
             },
             { 
-              icon: <Users className="text-orange-600 mr-3" />, 
-              title: 'Farmers Supported', 
+              icon: <Users className="text-orange-600 mr-1 sm:mr-2" size={16} />, 
+              title: 'Farmers', 
               value: systemStats.ruralImpact.totalFarmersSupported.toLocaleString(),
               trend: '↑24%'
             }
           ].map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-3">
+            <div key={index} className="bg-white rounded-lg shadow-md p-2 sm:p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-1 sm:mb-3">
                 <div className="flex items-center">
                   {stat.icon}
-                  <h3 className="text-lg font-semibold ml-2">{stat.title}</h3>
+                  <h3 className="text-xs sm:text-sm font-semibold ml-1 sm:ml-2">{stat.title}</h3>
                 </div>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                <span className="text-xs bg-blue-100 text-blue-800 px-1 sm:px-2 py-0.5 sm:py-1 rounded-full">
                   {stat.trend}
                 </span>
               </div>
-              <div className="text-2xl md:text-3xl font-bold text-gray-800">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
                 {stat.value}
               </div>
             </div>
@@ -795,15 +824,15 @@ function InventoryOptimization() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="grid md:grid-cols-2 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8"
         >
           {/* Inventory Distribution by Category */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Package className="mr-2 text-blue-600" /> Inventory Distribution
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
+              <Package className="mr-2 text-blue-600" size={18} /> Inventory Distribution
             </h3>
             {inventoryDistributionData.length > 0 ? (
-              <div className="h-64">
+              <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -812,7 +841,7 @@ function InventoryOptimization() {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
                     >
@@ -831,19 +860,19 @@ function InventoryOptimization() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
                 No inventory data available
               </div>
             )}
           </div>
 
           {/* Rural Impact Visualization */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Users className="mr-2 text-green-600" /> Rural Outreach
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
+              <Users className="mr-2 text-green-600" size={18} /> Rural Outreach
             </h3>
             {ruralImpactData.length > 0 ? (
-              <div className="h-64">
+              <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ruralImpactData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -852,25 +881,25 @@ function InventoryOptimization() {
                     <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
                     <Tooltip />
                     <Legend />
-                    <Bar yAxisId="left" dataKey="villages" name="Villages Served" fill="#8884d8" />
-                    <Bar yAxisId="right" dataKey="farmers" name="Farmers Supported" fill="#82ca9d" />
+                    <Bar yAxisId="left" dataKey="villages" name="Villages" fill="#8884d8" />
+                    <Bar yAxisId="right" dataKey="farmers" name="Farmers" fill="#82ca9d" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
                 No rural impact data available
               </div>
             )}
           </div>
 
           {/* Farmer Income Impact */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <Zap className="mr-2 text-yellow-600" /> Farmer Income Impact
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
+              <Zap className="mr-2 text-yellow-600" size={18} /> Farmer Income Impact
             </h3>
             {farmerIncomeImpactData.length > 0 ? (
-              <div className="h-64">
+              <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={farmerIncomeImpactData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -889,19 +918,19 @@ function InventoryOptimization() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
                 No impact data available
               </div>
             )}
           </div>
 
           {/* Seasonal Demand Patterns */}
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <CloudRain className="mr-2 text-blue-600" /> Seasonal Demand
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
+              <CloudRain className="mr-2 text-blue-600" size={18} /> Seasonal Demand
             </h3>
             {seasonalDemandData.length > 0 ? (
-              <div className="h-64">
+              <div className="h-48 sm:h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="80%" data={seasonalDemandData}>
                     <PolarGrid />
@@ -913,7 +942,7 @@ function InventoryOptimization() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-48 sm:h-64 text-gray-500">
                 No seasonal data available
               </div>
             )}
@@ -921,22 +950,22 @@ function InventoryOptimization() {
         </motion.div>
 
         {/* Search and Filter Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-            <div className="relative w-full md:w-64">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-48 md:w-64">
               <input 
                 type="text" 
                 placeholder="Search inventory..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-full w-full"
+                className="pl-10 pr-4 py-2 border rounded-full w-full text-sm sm:text-base"
               />
-              <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-2.5 sm:top-3 text-gray-400" size={18} />
             </div>
             <select 
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border rounded-full w-full md:w-auto"
+              className="px-3 sm:px-4 py-2 border rounded-full w-full sm:w-auto text-sm sm:text-base"
             >
               <option value="All">All Categories</option>
               <option value="Agricultural">Agricultural</option>
@@ -950,13 +979,13 @@ function InventoryOptimization() {
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-full ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
             >
-              <Grid size={20} />
+              <Grid size={18} />
             </button>
             <button 
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-full ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
             >
-              <List size={20} />
+              <List size={18} />
             </button>
           </div>
         </div>
@@ -970,12 +999,12 @@ function InventoryOptimization() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-white rounded-xl p-6 w-full max-w-2xl relative shadow-lg max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl relative shadow-lg max-h-[90vh] overflow-y-auto"
               >
                 <button 
                   onClick={() => {
@@ -983,27 +1012,27 @@ function InventoryOptimization() {
                     setEditMode(false);
                     setSelectedItem(null);
                   }}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+                  className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
-                <h2 className="text-2xl font-bold mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
                   {editMode ? 'Edit Inventory Item' : 'Create New Inventory Item'}
                 </h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium border-b pb-2">Basic Information</h3>
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-medium border-b pb-2">Basic Information</h3>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Item Name*</label>
                       <input 
                         type="text"
-                        placeholder="Enter item name (e.g., Wheat Seeds, Medical Kit)"
+                        placeholder="Enter item name"
                         value={editMode ? selectedItem?.name || '' : newInventoryItem.name}
                         onChange={(e) => editMode 
                           ? setSelectedItem({...selectedItem, name: e.target.value})
                           : setNewInventoryItem({...newInventoryItem, name: e.target.value})
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1015,7 +1044,7 @@ function InventoryOptimization() {
                           ? setSelectedItem({...selectedItem, category: e.target.value})
                           : setNewInventoryItem({...newInventoryItem, category: e.target.value})
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       >
                         <option value="">Select a Category</option>
                         <option value="Agricultural">Agricultural</option>
@@ -1025,7 +1054,7 @@ function InventoryOptimization() {
                       </select>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>
                         <input 
@@ -1036,25 +1065,25 @@ function InventoryOptimization() {
                             ? setSelectedItem({...selectedItem, quantity: Number(e.target.value)})
                             : setNewInventoryItem({...newInventoryItem, quantity: Number(e.target.value)})
                           }
-                          className="w-full px-4 py-2 border rounded-lg"
+                          className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Unit*</label>
                         <input 
                           type="text"
-                          placeholder="Specify unit (e.g., packets, kg)"
+                          placeholder="Specify unit"
                           value={editMode ? selectedItem?.unit || '' : newInventoryItem.unit}
                           onChange={(e) => editMode 
                             ? setSelectedItem({...selectedItem, unit: e.target.value})
                             : setNewInventoryItem({...newInventoryItem, unit: e.target.value})
                           }
-                          className="w-full px-4 py-2 border rounded-lg"
+                          className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                         />
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Price per Unit (₹)*</label>
                         <input 
@@ -1065,7 +1094,7 @@ function InventoryOptimization() {
                             ? setSelectedItem({...selectedItem, price: Number(e.target.value)})
                             : setNewInventoryItem({...newInventoryItem, price: Number(e.target.value)})
                           }
-                          className="w-full px-4 py-2 border rounded-lg"
+                          className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                         />
                       </div>
                       <div>
@@ -1078,7 +1107,7 @@ function InventoryOptimization() {
                             ? setSelectedItem({...selectedItem, reorderPoint: Number(e.target.value)})
                             : setNewInventoryItem({...newInventoryItem, reorderPoint: Number(e.target.value)})
                           }
-                          className="w-full px-4 py-2 border rounded-lg"
+                          className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -1091,7 +1120,7 @@ function InventoryOptimization() {
                           ? setSelectedItem({...selectedItem, warehouse: e.target.value})
                           : setNewInventoryItem({...newInventoryItem, warehouse: e.target.value})
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       >
                         <option value="">Select Warehouse Location</option>
                         {warehouses.map(wh => (
@@ -1110,13 +1139,13 @@ function InventoryOptimization() {
                           ? setSelectedItem({...selectedItem, supplier: e.target.value})
                           : setNewInventoryItem({...newInventoryItem, supplier: e.target.value})
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium border-b pb-2">Rural Impact Metrics</h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-medium border-b pb-2">Rural Impact Metrics</h3>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Yield Increase</label>
@@ -1140,7 +1169,7 @@ function InventoryOptimization() {
                               }
                             })
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1166,7 +1195,7 @@ function InventoryOptimization() {
                               }
                             })
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1192,7 +1221,7 @@ function InventoryOptimization() {
                               }
                             })
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1218,7 +1247,7 @@ function InventoryOptimization() {
                               }
                             })
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1244,15 +1273,15 @@ function InventoryOptimization() {
                               }
                             })
                         }
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Seasonal Demand</label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
                         {['Monsoon', 'Pre-Monsoon', 'Summer', 'Winter', 'Dry Season'].map(season => (
-                          <label key={season} className="inline-flex items-center">
+                          <label key={season} className="inline-flex items-center text-xs sm:text-sm">
                             <input 
                               type="checkbox"
                               value={season}
@@ -1288,14 +1317,14 @@ function InventoryOptimization() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-4 mt-6">
+                <div className="flex justify-end space-x-2 sm:space-x-4 mt-4 sm:mt-6">
                   <button 
                     onClick={() => {
                       setIsCreateItemOpen(false);
                       setEditMode(false);
                       setSelectedItem(null);
                     }}
-                    className="px-4 py-2 border rounded-full"
+                    className="px-3 sm:px-4 py-2 border rounded-full text-sm sm:text-base"
                   >
                     Cancel
                   </button>
@@ -1303,7 +1332,7 @@ function InventoryOptimization() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={editMode ? handleEditInventoryItem : handleCreateInventoryItem}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+                    className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-full hover:bg-blue-700 text-sm sm:text-base"
                   >
                     {editMode ? 'Update Item' : 'Create Item'}
                   </motion.button>
@@ -1320,23 +1349,23 @@ function InventoryOptimization() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-white rounded-xl p-6 w-full max-w-2xl relative shadow-lg max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl relative shadow-lg max-h-[90vh] overflow-y-auto"
               >
                 <button 
                   onClick={() => setIsWarehouseManagementOpen(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+                  className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
-                <h2 className="text-2xl font-bold mb-6">Add New Rural Warehouse</h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium border-b pb-2">Basic Information</h3>
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Add New Rural Warehouse</h2>
+                <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-medium border-b pb-2">Basic Information</h3>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse Name*</label>
                       <input 
@@ -1344,7 +1373,7 @@ function InventoryOptimization() {
                         placeholder="Warehouse Name"
                         value={newWarehouse.name}
                         onChange={(e) => setNewWarehouse({...newWarehouse, name: e.target.value})}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1355,7 +1384,7 @@ function InventoryOptimization() {
                         placeholder="Village/District, State"
                         value={newWarehouse.location}
                         onChange={(e) => setNewWarehouse({...newWarehouse, location: e.target.value})}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1366,15 +1395,15 @@ function InventoryOptimization() {
                         placeholder="Capacity in sq m"
                         value={newWarehouse.storageCapacity}
                         onChange={(e) => setNewWarehouse({...newWarehouse, storageCapacity: e.target.value})}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Product Categories</label>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1 sm:gap-2">
                         {['Agricultural', 'Medical', 'Seeds', 'FMCG'].map(category => (
-                          <label key={category} className="inline-flex items-center">
+                          <label key={category} className="inline-flex items-center text-xs sm:text-sm">
                             <input 
                               type="checkbox"
                               value={category}
@@ -1394,8 +1423,8 @@ function InventoryOptimization() {
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium border-b pb-2">Rural Impact Details</h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="text-base sm:text-lg font-medium border-b pb-2">Rural Impact Details</h3>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Villages Served*</label>
@@ -1410,7 +1439,7 @@ function InventoryOptimization() {
                             villagesServed: Number(e.target.value)
                           }
                         })}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1427,7 +1456,7 @@ function InventoryOptimization() {
                             farmersSupported: Number(e.target.value)
                           }
                         })}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
@@ -1442,7 +1471,7 @@ function InventoryOptimization() {
                             lastMileDelivery: e.target.value
                           }
                         })}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       >
                         <option value="">Select Delivery Method</option>
                         <option value="Bicycle/Animal Transport">Bicycle/Animal Transport</option>
@@ -1465,12 +1494,12 @@ function InventoryOptimization() {
                             avgDeliveryTime: e.target.value
                           }
                         })}
-                        className="w-full px-4 py-2 border rounded-lg"
+                        className="w-full px-3 sm:px-4 py-2 border rounded-lg text-sm sm:text-base"
                       />
                     </div>
                     
-                    <div className="flex items-center space-x-4">
-                      <label className="flex items-center">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                      <label className="flex items-center text-xs sm:text-sm">
                         <input 
                           type="checkbox"
                           checked={newWarehouse.ruralImpact.climateResilient}
@@ -1483,10 +1512,10 @@ function InventoryOptimization() {
                           })}
                           className="mr-2"
                         />
-                        <span className="text-sm">Climate Resilient Design</span>
+                        <span>Climate Resilient Design</span>
                       </label>
                       
-                      <label className="flex items-center">
+                      <label className="flex items-center text-xs sm:text-sm">
                         <input 
                           type="checkbox"
                           checked={newWarehouse.ruralImpact.solarPowered}
@@ -1499,16 +1528,16 @@ function InventoryOptimization() {
                           })}
                           className="mr-2"
                         />
-                        <span className="text-sm">Solar Powered</span>
+                        <span>Solar Powered</span>
                       </label>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-4 mt-6">
+                <div className="flex justify-end space-x-2 sm:space-x-4 mt-4 sm:mt-6">
                   <button 
                     onClick={() => setIsWarehouseManagementOpen(false)}
-                    className="px-4 py-2 border rounded-full"
+                    className="px-3 sm:px-4 py-2 border rounded-full text-sm sm:text-base"
                   >
                     Cancel
                   </button>
@@ -1516,7 +1545,7 @@ function InventoryOptimization() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleCreateWarehouse}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+                    className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-full hover:bg-blue-700 text-sm sm:text-base"
                   >
                     Create Warehouse
                   </motion.button>
