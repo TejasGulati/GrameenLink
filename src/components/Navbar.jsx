@@ -1,377 +1,463 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react'
+import { 
+  Link, 
+  useLocation,
+  useNavigate 
+} from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Menu, 
   X,
-  Send,
-  ChevronDown,
-  User,
-  Mail,
-  MessageCircle
-} from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../assets/logo.png';
+  Home,
+  Layers,
+  BarChart2,
+  DollarSign,
+  ShoppingCart,
+  PieChart,
+  BookOpen,
+  Database,
+  Zap,
+  Globe,
+  Sparkles,
+  Award
+} from 'lucide-react'
+import logo from '../assets/logo.png'
+import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: '',
-    email: '',
-    message: ''
-  });
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const location = useLocation();
-  const dropdownRef = useRef(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState(null)
+  const { isAuthenticated, user } = useAuth()
+  
+  const location = useLocation()
+  const navigate = useNavigate()
+  const menuRef = useRef(null)
+
+  const getNavItems = () => {
+    if (!isAuthenticated) {
+      return [
+        { 
+          id: 'solutions',
+          name: "Solutions", 
+          path: "/solutions",
+          icon: <Layers size={18} />,
+          subItems: [
+            { 
+              id: 'enterprise', 
+              name: "Enterprise Platform", 
+              path: "/enterprise",
+              icon: <PieChart size={16} className="mr-2" />,
+              description: "For funded startups and NGOs"
+            },
+            { 
+              id: 'basic', 
+              name: "Basic Inventory", 
+              path: "/basic",
+              icon: <ShoppingCart size={16} className="mr-2" />,
+              description: "For local shops and entrepreneurs"
+            }
+          ]
+        },
+        { 
+          id: 'investors', 
+          name: "Investors", 
+          path: "/investors", 
+          icon: <DollarSign size={18} />
+        },
+        { 
+          id: 'demo', 
+          name: "Live Demo", 
+          path: "/demo", 
+          icon: <BarChart2 size={18} />,
+          highlight: true
+        }
+      ]
+    }
+
+    const baseModules = [
+      {
+        id: 'inventory',
+        name: "Inventory",
+        path: "/inventory",
+        icon: <BookOpen size={16} className="mr-2" />,
+        description: "Smart inventory management"
+      }
+    ]
+
+    const enterpriseModules = [
+      {
+        id: 'blockchain',
+        name: "Blockchain",
+        path: "/blockchain",
+        icon: <Database size={16} className="mr-2" />,
+        description: "Transparent supply chain"
+      },
+      {
+        id: 'drone',
+        name: "Drone Logistics",
+        path: "/drone",
+        icon: <Zap size={16} className="mr-2" />,
+        description: "Aerial delivery network"
+      },
+      {
+        id: 'mobile-retail',
+        name: "Mobile Retail",
+        path: "/mobile-retail",
+        icon: <Globe size={16} className="mr-2" />,
+        description: "Commerce vans management"
+      },
+      {
+        id: 'kiosks',
+        name: "Village Kiosks",
+        path: "/kiosks",
+        icon: <Sparkles size={16} className="mr-2" />,
+        description: "Digital hubs management"
+      },
+      {
+        id: 'sustainability',
+        name: "Sustainability",
+        path: "/sustainability",
+        icon: <Award size={16} className="mr-2" />,
+        description: "Eco-friendly operations"
+      }
+    ]
+
+    const modules = user?.plan === 'enterprise' || user?.accountType === 'enterprise' 
+      ? [...baseModules, ...enterpriseModules]
+      : baseModules
+
+    return [
+      {
+        id: 'my-solutions',
+        name: "My Solutions",
+        path: "/solutions",
+        icon: <Layers size={18} />,
+        subItems: modules
+      },
+      { 
+        id: 'investors', 
+        name: "Investors", 
+        path: "/investors", 
+        icon: <DollarSign size={18} />
+      }
+    ]
+  }
+
+  const navItems = getNavItems()
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-    setActiveDropdown(null);
-  };
+    setIsMenuOpen(prev => !prev)
+    setActiveDropdown(null)
+  }
 
-  const openContactModal = () => {
-    setIsContactModalOpen(true);
-    setIsMenuOpen(false);
-  };
+  const getUserInitials = () => {
+    if (!user?.name) return 'U'
+    const names = user.name.split(' ')
+    return names.length > 1 
+      ? `${names[0][0]}${names[names.length - 1][0]}` 
+      : names[0][0]
+  }
 
-  const closeContactModal = () => {
-    setIsContactModalOpen(false);
-    setFormSubmitted(false);
-    setContactForm({ name: '', email: '', message: '' });
-  };
+  useEffect(() => {
+    setIsMenuOpen(false)
+    setActiveDropdown(null)
+    window.scrollTo(0, 0)
+  }, [location])
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setContactForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Simple validation
-    if (!contactForm.name || !contactForm.email || !contactForm.message) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    // Here you would typically send the form data to a backend
-    console.log('Contact Form Submitted:', contactForm);
-    
-    // Simulate form submission
-    setFormSubmitted(true);
-
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      closeContactModal();
-    }, 3000);
-  };
-
-  // Scroll and route change effects
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    setIsMenuOpen(false);
-    setActiveDropdown(null);
-  }, [location]);
-
-  // Click outside dropdown handler
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setActiveDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const moduleCategories = [
-    {
-      name: "Operations",
-      routes: [
-        { name: "Drone Logistics", path: "/drone" },
-        { name: "Inventory Management", path: "/inventory" },
-        { name: "Mobile Retail", path: "/mobile-retail" }
-      ]
-    },
-    {
-      name: "Innovation",
-      routes: [
-        { name: "Sustainability", path: "/sustainability" },
-        { name: "Village Kiosk", path: "/village-kiosk" },
-        { name: "Blockchain", path: "/blockchain" }
-      ]
+      setIsScrolled(window.scrollY > 10)
     }
-  ];
 
-  const NavLinks = ({ isMobile = false }) => (
-    <>
-      {moduleCategories.map((category, catIndex) => (
-        <div 
-          key={category.name} 
-          className={`
-            ${isMobile ? 'border-b border-gray-200' : ''}
-            ${isMobile ? 'py-2' : 'relative group'}
-          `}
-        >
-          {!isMobile && (
-            <button 
-              onClick={() => setActiveDropdown(activeDropdown === catIndex ? null : catIndex)}
-              className="
-                flex items-center justify-between w-full 
-                text-sm lg:text-base text-gray-700 font-medium 
-                hover:text-green-600 
-                transition-colors
-                px-3 py-2
-                rounded-md
-              "
-            >
-              {category.name}
-              <ChevronDown 
-                className={`
-                  ml-2 h-4 w-4 
-                  transform transition-transform duration-300
-                  ${activeDropdown === catIndex ? 'rotate-180' : ''}
-                `} 
-              />
-            </button>
-          )}
-          
-          {(isMobile || activeDropdown === catIndex) && (
-            <div 
-              className={`
-                ${isMobile ? 'pl-4' : 'absolute left-0 z-50 min-w-[200px] bg-white shadow-lg rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible'}
-                ${!isMobile && activeDropdown === catIndex ? '!opacity-100 !visible' : ''}
-              `}
-            >
-              {category.routes.map((route) => (
-                <Link 
-                  key={route.path}
-                  to={route.path}
-                  onClick={isMobile ? toggleMenu : undefined}
-                  className={`
-                    block 
-                    ${isMobile ? 'py-3 text-base' : 'px-4 py-2 text-sm'}
-                    text-gray-700 
-                    hover:bg-green-50 
-                    hover:text-green-600
-                    transition-colors
-                  `}
-                >
-                  {route.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </>
-  );
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target) && isMenuOpen) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
+
+  const toggleDropdown = (itemId) => {
+    setActiveDropdown(prev => prev === itemId ? null : itemId)
+  }
+
+  const ScrollToTopLink = ({ to, className, children }) => {
+    const handleClick = () => {
+      window.scrollTo(0, 0)
+    }
+    
+    return (
+      <Link to={to} className={className} onClick={handleClick}>
+        {children}
+      </Link>
+    )
+  }
+
+  const renderDropdownItem = (item, isMobile = false) => (
+    <ScrollToTopLink 
+      key={`sub-item-${item.id}`}
+      to={item.path}
+      className={`
+        flex items-start px-4 py-3 hover:bg-gradient-to-r from-green-50 to-blue-50 transition-all
+        ${isMobile ? 'text-sm rounded-md' : 'text-xs sm:text-sm rounded-md'}
+        border border-transparent hover:border-green-100
+      `}
+    >
+      <span className="text-green-600 mr-2 mt-0.5">{item.icon}</span>
+      <div>
+        <div className="font-medium text-gray-900">{item.name}</div>
+        <div className="text-gray-500 mt-1 text-xs">{item.description}</div>
+      </div>
+    </ScrollToTopLink>
+  )
+
+  const renderDropdownContent = (items, isMobile = false) => (
+    <div className={isMobile ? 'space-y-2 pl-2 py-2' : 'grid grid-cols-1 gap-2 p-2 w-64'}>
+      {items.map((item) => renderDropdownItem(item, isMobile))}
+    </div>
+  )
 
   return (
-    <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 100 }}
-        className={`
-          fixed top-0 left-0 right-0 z-50 
-          ${isScrolled ? 'bg-white/90 backdrop-blur-xl shadow-xl' : 'bg-transparent'}
-          transition-all duration-300 ease-in-out
-        `}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3 sm:py-4 space-x-2 sm:space-x-4">
-            {/* Logo Section */}
-            <Link 
-              to="/" 
-              className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0"
-            >
-              <motion.img
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                src={logo}
-                alt="GrameenLink Logo"
-                className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shadow-lg object-cover"
-              />
-              <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 text-transparent bg-clip-text truncate">
-                GrameenLink
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div 
-              ref={dropdownRef}
-              className="hidden md:flex items-center space-x-4 lg:space-x-6 flex-grow justify-center"
-            >
-              <NavLinks />
-            </div>
-
-            {/* Contact Button - Desktop and Mobile */}
-            <div className="hidden md:block flex-shrink-0">
-              <motion.button
-                onClick={openContactModal}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center bg-gradient-to-r from-green-600 to-blue-600 text-white px-3 sm:px-4 py-2 rounded-full shadow-xl hover:shadow-2xl transition-all"
-              >
-                Contact <Send className="ml-2 h-4 w-4" />
-              </motion.button>
-            </div>
-
-            {/* Mobile Menu Toggle */}
-            <div className="md:hidden flex-shrink-0">
-              <motion.button
-                onClick={toggleMenu}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-                className="text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md"
-              >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </motion.button>
-            </div>
-          </div>
-
-          {/* Mobile Menu Dropdown - Update Contact Link */}
-          <AnimatePresence>
-            {isMenuOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ 
-                  duration: 0.3, 
-                  ease: "easeInOut" 
-                }}
-                className="md:hidden absolute left-0 right-0 top-full bg-white shadow-2xl rounded-b-lg"
-              >
-                <div className="px-4 pt-2 pb-4 space-y-2">
-                  <NavLinks isMobile={true} />
-                  
-                  <button 
-                    onClick={openContactModal}
-                    className="
-                      block w-full text-center 
-                      bg-gradient-to-r from-green-600 to-blue-600 
-                      text-white py-3 rounded-full
-                      text-base
-                      transition-transform hover:scale-105 active:scale-95
-                      mt-4
-                    "
-                  >
-                    Contact <Send className="inline-block ml-2 h-5 w-5" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.nav>
-
-      {/* Contact Modal */}
-      <AnimatePresence>
-        {isContactModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className={`
+        fixed top-0 left-0 right-0 z-50 
+        ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-xs' : 'bg-white/90 backdrop-blur-sm'}
+        transition-all duration-200 ease-out
+        border-b border-gray-200/50
+      `}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center h-16">
+          <ScrollToTopLink 
+            to="/" 
+            className="flex items-center flex-shrink-0"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center"
             >
-              {!formSubmitted ? (
-                <>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-green-600">Contact Us</h2>
-                    <button 
-                      onClick={closeContactModal}
-                      className="text-gray-500 hover:text-red-500 transition-colors"
-                    >
-                      <X size={24} />
-                    </button>
-                  </div>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        name="name"
-                        value={contactForm.name}
-                        onChange={handleInputChange}
-                        placeholder="Your Name"
-                        className="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        required
-                      />
-                    </div>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="email"
-                        name="email"
-                        value={contactForm.email}
-                        onChange={handleInputChange}
-                        placeholder="Your Email"
-                        className="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        required
-                      />
-                    </div>
-                    <div className="relative">
-                      <MessageCircle className="absolute left-3 top-3 text-gray-400" size={20} />
-                      <textarea
-                        name="message"
-                        value={contactForm.message}
-                        onChange={handleInputChange}
-                        placeholder="Your Message"
-                        rows={4}
-                        className="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        required
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-3 rounded-full hover:opacity-90 transition-opacity"
-                    >
-                      Send Message
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-green-600 mb-4"
-                  >
-                    <Send size={48} className="mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold">Thank You!</h3>
-                    <p className="text-gray-600 mt-2">Your message has been sent successfully.</p>
-                  </motion.div>
-                </div>
-              )}
+              <img
+                src={logo}
+                alt="GrameenLink Logo"
+                className="h-8 w-8"
+              />
+              <span className="ml-2 text-lg font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                GrameenLink
+              </span>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+          </ScrollToTopLink>
+
+          <div className="hidden lg:flex items-center space-x-2">
+            <NavLinks />
+            {isAuthenticated && (
+              <div className="relative">
+                <div className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-50/50 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white font-medium">
+                    {getUserInitials()}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{user?.name || 'User'}</span>
+                </div>
+              </div>
+            )}
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm rounded-md hover:from-green-700 hover:to-teal-700 transition-all"
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
+
+          <div className="flex lg:hidden items-center">
+            {isAuthenticated && (
+              <div className="relative mr-2">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-green-600 to-teal-600 text-white font-medium">
+                  {getUserInitials()}
+                </div>
+              </div>
+            )}
+            <motion.button
+              onClick={toggleMenu}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="p-2 rounded-md text-gray-700 hover:bg-gray-100/50"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            >
+              {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </motion.button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden absolute left-0 right-0 top-full bg-white/95 backdrop-blur-sm shadow-md rounded-b-md overflow-hidden border-t border-gray-200/50"
+            >
+              <NavLinks isMobile={true} />
+              <div className="px-4 py-3 border-t border-gray-200/50 bg-gradient-to-r from-green-50/30 to-blue-50/30">
+                <div className="text-xs text-gray-500 text-center">
+                  {isAuthenticated ? `Logged in as ${user?.name || 'User'}` : 'Launching soon in pilot villages'}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.nav>
+  )
+
+  function NavLinks({ isMobile = false }) {
+    return (
+      <div 
+        ref={menuRef}
+        className={`
+          ${isMobile ? 'space-y-2 px-4 py-4' : 'flex items-center space-x-2'}
+        `}
+      >
+        <ScrollToTopLink
+          to="/"
+          className={`
+            flex items-center 
+            ${isMobile ? 'text-sm py-3 px-3 font-medium rounded-md' : 'hidden md:flex text-sm py-2 px-3'}
+            text-gray-700 hover:text-green-600 transition-colors
+            hover:bg-gradient-to-r from-green-50/50 to-blue-50/50
+          `}
+        >
+          <Home size={16} className={`${isMobile ? 'mr-2' : 'mr-1'}`} />
+          Home
+        </ScrollToTopLink>
+
+        {navItems.map((item) => (
+          <div 
+            key={`nav-item-${item.id}`}
+            className={`
+              ${isMobile ? 'border-b border-gray-100/50 last:border-0 pb-2 mb-2' : 'relative group'}
+            `}
+          >
+            {item.subItems ? (
+              <>
+                {!isMobile && (
+                  <div className="relative">
+                    <button 
+                      onClick={() => toggleDropdown(item.id)}
+                      className={`
+                        flex items-center px-3 py-2 rounded-md transition-all
+                        ${activeDropdown === item.id ? 'bg-gradient-to-r from-green-50 to-blue-50 shadow-xs' : 'hover:bg-gray-50/50'}
+                        ${item.highlight ? 'bg-green-50 text-green-700' : 'text-gray-700'}
+                        text-sm font-medium
+                        border border-transparent hover:border-gray-200
+                      `}
+                    >
+                      {item.icon && <span className="mr-2">{item.icon}</span>}
+                      <span>{item.name}</span>
+                    </button>
+                    
+                    <AnimatePresence>
+                      {activeDropdown === item.id && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ type: 'spring', damping: 25, stiffness: 500 }}
+                          className={`
+                            absolute left-0 z-50 mt-1
+                            bg-white rounded-md shadow-md overflow-hidden
+                            border border-gray-200/80 backdrop-blur-sm
+                          `}
+                        >
+                          <div className="p-3 border-b border-gray-100 bg-gradient-to-r from-green-50/80 to-blue-50/80">
+                            <h4 className="font-semibold text-gray-800 text-sm">
+                              {isAuthenticated ? 'Your Solutions' : 'Product Solutions'}
+                            </h4>
+                            <p className="text-xs text-gray-500">
+                              {isAuthenticated ? 'Access your subscribed solutions' : 'Choose the right plan for your needs'}
+                            </p>
+                          </div>
+                          {renderDropdownContent(item.subItems)}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+                
+                {isMobile && (
+                  <div className="px-1">
+                    <button 
+                      onClick={() => toggleDropdown(item.id)}
+                      className={`
+                        flex items-center justify-between w-full py-3 px-3
+                        text-gray-700 font-medium rounded-md text-sm
+                        ${activeDropdown === item.id ? 'bg-gradient-to-r from-green-50/80 to-blue-50/80' : ''}
+                      `}
+                    >
+                      <div className="flex items-center">
+                        {item.icon && <span className="mr-2">{item.icon}</span>}
+                        {item.name}
+                      </div>
+                    </button>
+                    
+                    <AnimatePresence>
+                      {activeDropdown === item.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="pl-4 pt-2 overflow-hidden"
+                        >
+                          {renderDropdownContent(item.subItems, true)}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </>
+            ) : (
+              <ScrollToTopLink
+                to={item.path}
+                className={`
+                  flex items-center px-3 py-2 rounded-md transition-all
+                  ${isMobile ? 'text-sm py-3 px-3' : 'text-sm'}
+                  ${item.highlight ? 
+                    'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 shadow-xs' : 
+                    'text-gray-700 hover:text-green-600 hover:bg-gradient-to-r from-green-50/50 to-blue-50/50'
+                  }
+                  border ${item.highlight ? 'border-green-600/30' : 'border-transparent hover:border-gray-200'}
+                `}
+              >
+                {item.icon && <span className={isMobile ? 'mr-2' : 'mr-2'}>{item.icon}</span>}
+                {item.name}
+              </ScrollToTopLink>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
 }
- 
-export default Navbar;
+
+export default Navbar
