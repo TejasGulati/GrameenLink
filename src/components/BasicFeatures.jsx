@@ -195,6 +195,16 @@ function BasicFeatures() {
     navigate('/')
   }
 
+  const scrollToContact = () => {
+    navigate('/')
+    setTimeout(() => {
+      const contactSection = document.getElementById('contact')
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, 100)
+  }
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
@@ -766,63 +776,63 @@ function BasicFeatures() {
       </div>
 
       {/* CTA Section */}
-<div className="bg-green-700">
-  <div className="max-w-7xl mx-auto py-16 px-6 sm:py-24 lg:px-8">
-    <div className="text-center">
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
-      >
-        Ready to simplify your shop management?
-      </motion.h2>
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="mt-4 text-lg leading-6 text-green-200"
-      >
-        Start with our free plan - no commitment required.
-      </motion.p>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-      >
-        <Link
-          to="/signup"
-          className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-green-700 hover:bg-green-50 shadow-sm hover:shadow-md transition-all"
-        >
-          Create Free Account
-        </Link>
-        <Link
-          to="/get-in-touch"
-          className="flex items-center justify-center rounded-md border border-white px-6 py-3 text-base font-medium text-white hover:bg-green-600 shadow-sm hover:shadow-md transition-all"
-        >
-          <MessageSquare className="mr-2 h-5 w-5" />
-          WhatsApp Help
-        </Link>
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className="mt-6"
-      >
-        <p className="text-sm text-green-200">
-          Works on any smartphone - no app download needed
-        </p>
-      </motion.div>
+      <div className="bg-green-700">
+        <div className="max-w-7xl mx-auto py-16 px-6 sm:py-24 lg:px-8">
+          <div className="text-center">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            >
+              Ready to simplify your shop management?
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mt-4 text-lg leading-6 text-green-200"
+            >
+              Start with our free plan - no commitment required.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
+            >
+              <Link
+                to="/register"
+                className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-green-700 hover:bg-green-50 shadow-sm hover:shadow-md transition-all"
+              >
+                Create Free Account
+              </Link>
+              <button
+                onClick={scrollToContact}
+                className="flex items-center justify-center rounded-md border border-white px-6 py-3 text-base font-medium text-white hover:bg-green-600 shadow-sm hover:shadow-md transition-all"
+              >
+                <MessageSquare className="mr-2 h-5 w-5" />
+                WhatsApp Help
+              </button>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mt-6"
+            >
+              <p className="text-sm text-green-200">
+              Works on any smartphone - no app download needed
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-</div>
   )
 }
 

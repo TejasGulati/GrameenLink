@@ -64,6 +64,9 @@ const BasicFeatures = lazy(() => import('./components/BasicFeatures'))
 const Login = lazy(() => import('./components/Login'))
 const Register = lazy(() => import('./components/Register'))
 const Profile = lazy(() => import('./components/Profile'))
+// Add these imports at the top with other component imports
+const SecuritySettings = lazy(() => import('./components/SecuritySettings'))
+const AccountSettings = lazy(() => import('./components/AccountSettings'))
 
 const STATS = [
   { value: '50%', label: 'Cost Reduction' },
@@ -1470,6 +1473,18 @@ function App() {
                     <DroneDashboard />
                   </PrivateRoute>
                 } />
+                // In your App.jsx, update the routes section to use the correct component names:
+
+<Route path="/profile/security" element={
+  <PrivateRoute>
+    <SecuritySettings />  {/* Changed from Security to SecuritySettings */}
+  </PrivateRoute>
+} />
+<Route path="/profile/settings" element={
+  <PrivateRoute>
+    <AccountSettings />  {/* Changed from Settings to AccountSettings */}
+  </PrivateRoute>
+} />
                 <Route path="/mobile-retail" element={
                   <PrivateRoute>
                     <MobileRetailVan />

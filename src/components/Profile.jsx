@@ -10,7 +10,9 @@ import {
   LogOut,
   ArrowLeft,
   CheckCircle,
-  XCircle
+  XCircle,
+  Key,
+  Settings
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -71,7 +73,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-10 mt-12 p-6">
       <div className="max-w-4xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -145,6 +147,22 @@ const Profile = () => {
                     className="block w-full text-center py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
                     Go to Dashboard
+                  </Link>
+                  
+                  <Link
+                    to="/profile/security"
+                    className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <Key className="h-4 w-4" />
+                    Security Settings
+                  </Link>
+                  
+                  <Link
+                    to="/profile/settings"
+                    className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Account Settings
                   </Link>
                 </div>
               </div>

@@ -19,7 +19,12 @@ import {
   Zap,
   Globe,
   Sparkles,
-  Award
+  Award,
+  LogOut,
+  User,
+  ChevronDown,
+  Settings,
+  Key
 } from 'lucide-react'
 import logo from '../assets/logo.png'
 import { useAuth } from '../context/AuthContext'
@@ -28,11 +33,13 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState(null)
-  const { isAuthenticated, user } = useAuth()
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
   
   const location = useLocation()
   const navigate = useNavigate()
   const menuRef = useRef(null)
+  const userMenuRef = useRef(null)
 
   const getNavItems = () => {
     if (!isAuthenticated) {
@@ -151,6 +158,16 @@ function Navbar() {
     setActiveDropdown(null)
   }
 
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(prev => !prev)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+    setIsUserMenuOpen(false)
+  }
+
   const getUserInitials = () => {
     if (!user?.name) return 'U'
     const names = user.name.split(' ')
@@ -171,8 +188,15 @@ function Navbar() {
     }
 
     const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target) && isMenuOpen) {
-        setIsMenuOpen(false)
+      if (menuRef.current && !menuRef.current.contains(event.target) ){
+        if (isMenuOpen) {
+          setIsMenuOpen(false)
+        }
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        if (isUserMenuOpen) {
+          setIsUserMenuOpen(false)
+        }
       }
     }
 
@@ -183,7 +207,7 @@ function Navbar() {
       window.removeEventListener('scroll', handleScroll)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isMenuOpen])
+  }, [isMenuOpen, isUserMenuOpen])
 
   const toggleDropdown = (itemId) => {
     setActiveDropdown(prev => prev === itemId ? null : itemId)
@@ -261,17 +285,66 @@ function Navbar() {
 
           <div className="hidden lg:flex items-center space-x-2">
             <NavLinks />
-            {isAuthenticated && (
-              <div className="relative">
-                <div className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-50/50 transition-colors">
+            {isAuthenticated ? (
+              <div ref={userMenuRef} className="relative">
+                <button 
+                  onClick={toggleUserMenu}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-50/50 transition-colors"
+                >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white font-medium">
                     {getUserInitials()}
                   </div>
                   <span className="text-sm font-medium text-gray-700">{user?.name || 'User'}</span>
-                </div>
+                  <ChevronDown size={16} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                <AnimatePresence>
+                  {isUserMenuOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 500 }}
+                      className="absolute right-0 z-50 mt-1 w-56 bg-white rounded-md shadow-md overflow-hidden border border-gray-200/80 backdrop-blur-sm"
+                    >
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <User className="mr-2 h-4 w-4" />
+                          Profile
+                        </Link>
+                        <Link
+                          to="/profile/settings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </Link>
+                        <Link
+                          to="/profile/security"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Key className="mr-2 h-4 w-4" />
+                          Security
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100"
+                        >
+                          <LogOut className="mr-2 h-4 w-4" />
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            )}
-            {!isAuthenticated && (
+            ) : (
               <>
                 <Link
                   to="/login"
@@ -319,6 +392,17 @@ function Navbar() {
               className="lg:hidden absolute left-0 right-0 top-full bg-white/95 backdrop-blur-sm shadow-md rounded-b-md overflow-hidden border-t border-gray-200/50"
             >
               <NavLinks isMobile={true} />
+              {isAuthenticated && (
+                <div className="px-4 py-3 border-t border-gray-200/50">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
               <div className="px-4 py-3 border-t border-gray-200/50 bg-gradient-to-r from-green-50/30 to-blue-50/30">
                 <div className="text-xs text-gray-500 text-center">
                   {isAuthenticated ? `Logged in as ${user?.name || 'User'}` : 'Launching soon in pilot villages'}

@@ -238,6 +238,16 @@ function EnterpriseFeatures() {
     }
   }
 
+  const scrollToContact = () => {
+    navigate('/')
+    setTimeout(() => {
+      const contactSection = document.getElementById('contact')
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, 100)
+  }
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Hero Section */}
@@ -675,13 +685,23 @@ function EnterpriseFeatures() {
                           ))}
                         </ul>
                         <div className="mt-6">
-                          <Link
-                            to="/contact"
-                            className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                          >
-                            Get similar results for your organization
-                            <ArrowRight className="ml-1 h-4 w-4" />
-                          </Link>
+                          {isAuthenticated ? (
+                            <Link
+                              to="/"
+                              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              View your dashboard
+                              <ArrowRight className="ml-1 h-4 w-4" />
+                            </Link>
+                          ) : (
+                            <Link
+                              to="/register"
+                              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                              Create account to get started
+                              <ArrowRight className="ml-1 h-4 w-4" />
+                            </Link>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -781,7 +801,8 @@ function EnterpriseFeatures() {
                         </button>
                       ) : (
                         <Link
-                          to="/register"
+                          to={tier.name === 'Enterprise' ? '/' : '/register'}
+                          onClick={tier.name === 'Enterprise' ? scrollToContact : undefined}
                           className={`block w-full py-3 px-6 rounded-md text-center font-medium ${
                             tier.recommended
                               ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:shadow-lg'
@@ -810,13 +831,13 @@ function EnterpriseFeatures() {
                   Our team can design a tailored solution for your specific requirements and scale.
                 </p>
                 <div className="mt-4">
-                  <Link
-                    to="/contact"
+                  <button
+                    onClick={scrollToContact}
                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                   >
                     Request Consultation
                     <BookOpen className="ml-2 h-4 w-4" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -914,12 +935,12 @@ function EnterpriseFeatures() {
             >
               Live Demo
             </Link>
-            <Link
-              to="/contact"
+            <button
+              onClick={scrollToContact}
               className="flex items-center justify-center rounded-md border border-blue-600 px-6 py-3 text-base font-medium text-blue-600 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all"
             >
               Contact Sales
-            </Link>
+            </button>
           </motion.div>
         </div>
       </div>
