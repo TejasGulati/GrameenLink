@@ -20,7 +20,10 @@ import {
   LineChart,
   Hand,
   Users,
-  Globe
+  Globe,
+  ChevronDown,
+  ChevronUp,
+  Check
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
@@ -246,9 +249,20 @@ const LiveDemo = () => {
     setTimeout(() => {
       const contactSection = document.getElementById('contact')
       if (contactSection) {
-        contactSection.scrollIntoView({ behavior: 'smooth' })
+        const contactCardToggle = contactSection.querySelector('[class*="cursor-pointer"]')
+        if (contactCardToggle) {
+          const isCollapsed = contactSection.querySelector('[class*="max-h-0"]')
+          if (isCollapsed) {
+            contactCardToggle.click()
+          }
+        }
+        
+        window.scrollTo({
+          top: contactSection.offsetTop - 60,
+          behavior: 'smooth'
+        })
       }
-    }, 100)
+    }, 150)
   }
 
   return (
@@ -1060,4 +1074,3 @@ const LiveDemo = () => {
 }
 
 export default LiveDemo
-

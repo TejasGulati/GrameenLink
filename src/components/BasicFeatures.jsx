@@ -16,9 +16,10 @@ import {
   Clock,
   Shield,
   Heart,
-  Globe
+  Globe,
+  ArrowRight,
+  BookOpen
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -200,9 +201,20 @@ function BasicFeatures() {
     setTimeout(() => {
       const contactSection = document.getElementById('contact')
       if (contactSection) {
-        contactSection.scrollIntoView({ behavior: 'smooth' })
+        const contactCardToggle = contactSection.querySelector('[class*="cursor-pointer"]')
+        if (contactCardToggle) {
+          const isCollapsed = contactSection.querySelector('[class*="max-h-0"]')
+          if (isCollapsed) {
+            contactCardToggle.click()
+          }
+        }
+        
+        window.scrollTo({
+          top: contactSection.offsetTop - 60,
+          behavior: 'smooth'
+        })
       }
-    }, 100)
+    }, 150)
   }
 
   return (
@@ -213,12 +225,7 @@ function BasicFeatures() {
         <div className="max-w-7xl mx-auto">
           <div className="relative z-10 pb-12 pt-24 sm:pt-32 lg:pb-16 lg:pt-40 px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center">
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl"
-              >
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
                 {isAuthenticated && user?.plan === 'basic' ? (
                   'Your Basic Inventory Tools'
                 ) : (
@@ -226,26 +233,16 @@ function BasicFeatures() {
                     Simple Inventory for <span className="text-green-200">Local Shops</span>
                   </>
                 )}
-              </motion.h1>
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="mt-6 text-xl text-green-100"
-              >
+              </h1>
+              <p className="mt-6 text-xl text-green-100">
                 {isAuthenticated && user?.plan === 'basic' ? (
                   'Manage your shop inventory with these essential tools'
                 ) : (
                   'Affordable, easy-to-use tools designed for small rural businesses with basic smartphones'
                 )}
-              </motion.p>
+              </p>
               {(!isAuthenticated || user?.plan !== 'basic') && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-                >
+                <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                   <Link
                     to="/demo"
                     className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-green-700 hover:bg-green-50 shadow-sm hover:shadow-md transition-all"
@@ -270,15 +267,10 @@ function BasicFeatures() {
                       <MessageSquare className="ml-2 h-4 w-4" />
                     </Link>
                   )}
-                </motion.div>
+                </div>
               )}
               {isAuthenticated && user?.plan === 'basic' && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-                >
+                <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                   <Link
                     to="/inventory"
                     className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-green-700 hover:bg-green-50 shadow-sm hover:shadow-md transition-all"
@@ -286,14 +278,9 @@ function BasicFeatures() {
                     Open Inventory
                     <Zap className="ml-2 h-4 w-4" />
                   </Link>
-                </motion.div>
+                </div>
               )}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="mt-8 flex items-center justify-center space-x-4"
-              >
+              <div className="mt-8 flex items-center justify-center space-x-4">
                 <div className="flex -space-x-2">
                   <img
                     className="inline-block h-8 w-8 rounded-full ring-2 ring-green-600"
@@ -314,7 +301,7 @@ function BasicFeatures() {
                 <p className="text-sm text-green-100">
                   Trusted by <span className="font-semibold">1,200+</span> local shops
                 </p>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -325,13 +312,7 @@ function BasicFeatures() {
         <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:gap-24 lg:items-start">
           <div className="relative sm:py-16 lg:py-0">
             <div className="relative mx-auto max-w-md px-6 sm:max-w-3xl lg:max-w-none lg:px-0">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="relative pt-64 pb-10 rounded-2xl shadow-xl overflow-hidden"
-              >
+              <div className="relative pt-64 pb-10 rounded-2xl shadow-xl overflow-hidden">
                 <div ref={dashboardRef} className="absolute inset-0 bg-green-800 rounded-2xl">
                   <div className="absolute inset-0 bg-gradient-to-t from-green-800 to-green-700 opacity-90"></div>
                   <div className="relative px-8 pt-8">
@@ -342,7 +323,6 @@ function BasicFeatures() {
                       </span>
                     </div>
                     
-                    {/* Enhanced App Visualization */}
                     <div className="mt-6 grid grid-cols-3 gap-2">
                       {[
                         { icon: <Package className="mx-auto h-5 w-5 text-green-300" />, value: "42", label: "Items", trend: "steady" },
@@ -403,44 +383,26 @@ function BasicFeatures() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
 
           <div className="relative mx-auto max-w-md px-6 sm:max-w-3xl lg:px-0">
             <div className="pt-12 sm:pt-16 lg:pt-20">
-              <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-              >
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Designed for <span className="text-green-600">Rural Shops</span>
-              </motion.h2>
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="mt-6 space-y-6 text-gray-500"
-              >
+              </h2>
+              <div className="mt-6 space-y-6 text-gray-500">
                 <p className="text-lg">
                   Our inventory system works even with poor internet connectivity and basic smartphones - no fancy features, just what you need.
                 </p>
                 <p className="text-base">
                   Perfect for grocery stores, pharmacies, and small shops in villages with unreliable electricity and internet.
                 </p>
-              </motion.div>
+              </div>
             </div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-10"
-            >
+            <div className="mt-10">
               <dl className="grid grid-cols-2 gap-x-4 gap-y-8">
                 {[
                   { name: 'Setup Time', value: '<5 minutes', icon: <Clock className="w-5 h-5 text-green-600" /> },
@@ -459,7 +421,7 @@ function BasicFeatures() {
                   </div>
                 ))}
               </dl>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -467,35 +429,19 @@ function BasicFeatures() {
       {/* Features Section */}
       <div className="py-16 bg-gray-50 sm:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto text-center"
-          >
+          <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               Essential Features
             </h2>
             <p className="mt-4 text-lg text-gray-500">
               Everything you need to manage your shop better, nothing you don't
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-16 space-y-6 max-w-4xl mx-auto"
-          >
+          <div className="mt-16 space-y-6 max-w-4xl mx-auto">
             {features.map((feature, index) => (
-              <motion.div 
+              <div 
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
                 className="overflow-hidden bg-white shadow sm:rounded-lg hover:shadow-md transition-shadow"
               >
                 <button
@@ -519,44 +465,36 @@ function BasicFeatures() {
                     )}
                   </div>
                 </button>
-                <AnimatePresence>
-                  {expandedFeature === index && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-6 pb-6"
-                    >
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-3">INCLUDES</h4>
-                          <ul className="space-y-3">
-                            {feature.details.map((detail, i) => (
-                              <li key={i} className="flex items-start">
-                                <Check className="flex-shrink-0 h-5 w-5 text-green-500 mr-2 mt-0.5" />
-                                <span className="text-gray-700">{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                          <h4 className="text-sm font-medium text-gray-500 mb-3">YOUR BENEFIT</h4>
-                          <p className="text-green-700 font-medium">{feature.benefit}</p>
-                          <div className="mt-3 flex items-center text-sm text-gray-500">
-                            <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                            Based on average shop results
-                          </div>
+                {expandedFeature === index && (
+                  <div className="px-6 pb-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-3">INCLUDES</h4>
+                        <ul className="space-y-3">
+                          {feature.details.map((detail, i) => (
+                            <li key={i} className="flex items-start">
+                              <Check className="flex-shrink-0 h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                              <span className="text-gray-700">{detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                        <h4 className="text-sm font-medium text-gray-500 mb-3">YOUR BENEFIT</h4>
+                        <p className="text-green-700 font-medium">{feature.benefit}</p>
+                        <div className="mt-3 flex items-center text-sm text-gray-500">
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                          </svg>
+                          Based on average shop results
                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
 
@@ -564,37 +502,21 @@ function BasicFeatures() {
       {(!isAuthenticated || user?.plan !== 'basic') && (
         <div className="bg-white py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl mx-auto text-center"
-            >
+            <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Simple, Affordable Pricing
               </h2>
               <p className="mt-4 text-lg text-gray-500">
                 Pay only for what you need. Start free, upgrade anytime.
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto"
-            >
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {pricingPlans.map((plan, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className={`rounded-2xl shadow-lg overflow-hidden ${
-                    plan.popular ? 'ring-2 ring-green-500 transform md:-translate-y-2' : 'border border-gray-200'
+                  className={`rounded-2xl shadow-lg overflow-hidden border ${
+                    plan.popular ? 'ring-2 ring-green-500 transform md:-translate-y-2' : 'border-gray-200'
                   }`}
                 >
                   {plan.popular && (
@@ -603,7 +525,7 @@ function BasicFeatures() {
                     </div>
                   )}
                   <div className="p-6">
-                    <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
+                    <h3 className="text-2xl font-bold text-gray-800">{plan.name}</h3>
                     <p className="mt-2 text-gray-600">{plan.description}</p>
                     <div className="mt-4 flex items-baseline">
                       <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
@@ -624,7 +546,7 @@ function BasicFeatures() {
                       {isAuthenticated ? (
                         <button
                           onClick={() => handleSelectPlan(plan.name)}
-                          className={`block w-full py-3 px-6 rounded-md text-center font-medium ${
+                          className={`w-full block text-center px-4 py-3 rounded-md font-medium ${
                             plan.popular
                               ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg'
                               : 'bg-gray-50 text-gray-800 hover:bg-gray-100'
@@ -634,8 +556,9 @@ function BasicFeatures() {
                         </button>
                       ) : (
                         <Link
-                          to="/register"
-                          className={`block w-full py-3 px-6 rounded-md text-center font-medium ${
+                          to={plan.name === 'Annual Pro' ? '/' : '/register'}
+                          onClick={plan.name === 'Annual Pro' ? scrollToContact : undefined}
+                          className={`w-full block text-center px-4 py-3 rounded-md font-medium ${
                             plan.popular
                               ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg'
                               : 'bg-gray-50 text-gray-800 hover:bg-gray-100'
@@ -651,21 +574,27 @@ function BasicFeatures() {
                       </p>
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-8 text-center"
-            >
-              <p className="text-gray-600 text-sm">
-                Need more than 5 users? <Link to="/contact" className="text-green-600 hover:text-green-700">Contact us</Link> for enterprise pricing.
-              </p>
-            </motion.div>
+            <div className="mt-12 bg-white p-6 rounded-xl shadow-sm max-w-3xl mx-auto">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900">Need custom features?</h3>
+                <p className="mt-2 text-gray-600">
+                  Our team can design a tailored solution for your specific shop requirements.
+                </p>
+                <div className="mt-4">
+                  <button
+                    onClick={scrollToContact}
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                  >
+                    Request Consultation
+                    <BookOpen className="ml-2 h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -673,96 +602,88 @@ function BasicFeatures() {
       {/* Testimonials */}
       <div className="bg-gray-50 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto text-center"
-          >
+          <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               Loved by Local Businesses
             </h2>
             <p className="mt-4 text-lg text-gray-500">
               Don't take our word for it. Here's what shop owners say:
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-16 flow-root"
-          >
+          <div className="mt-16 flow-root">
             <div className="-my-12">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentTestimonial}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="py-12"
-                >
-                  <div className="md:flex md:items-center md:justify-between md:space-x-14">
-                    <div className="pt-8 md:flex-1 md:pt-0">
-                      <blockquote>
-                        <p className="text-2xl font-medium text-gray-900">
-                          "{testimonials[currentTestimonial].quote}"
-                        </p>
-                        <footer className="mt-8">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 inline-flex rounded-full overflow-hidden h-12 w-12 bg-gray-200">
-                              <img 
-                                src={testimonials[currentTestimonial].image} 
-                                alt={testimonials[currentTestimonial].name}
-                                className="h-full w-full object-cover"
-                              />
+              <div key={currentTestimonial} className="py-12">
+                <div className="md:flex md:items-center md:justify-between md:space-x-14">
+                  <div className="pt-8 md:flex-1 md:pt-0">
+                    <blockquote>
+                      <p className="text-2xl font-medium text-gray-900">
+                        "{testimonials[currentTestimonial].quote}"
+                      </p>
+                      <footer className="mt-8">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 inline-flex rounded-full overflow-hidden h-12 w-12 bg-gray-200">
+                            <img 
+                              src={testimonials[currentTestimonial].image} 
+                              alt={testimonials[currentTestimonial].name}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-base font-medium text-gray-900">
+                              {testimonials[currentTestimonial].name}
                             </div>
-                            <div className="ml-4">
-                              <div className="text-base font-medium text-gray-900">
-                                {testimonials[currentTestimonial].name}
-                              </div>
-                              <div className="text-base font-medium text-green-600">
-                                {testimonials[currentTestimonial].location}
-                              </div>
+                            <div className="text-base font-medium text-green-600">
+                              {testimonials[currentTestimonial].location}
                             </div>
                           </div>
-                        </footer>
-                      </blockquote>
-                    </div>
-                    <div className="mt-12 md:mt-0 md:flex-1">
-                      <div className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center">
-                          <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                          </svg>
-                          <h3 className="ml-2 text-lg font-medium text-gray-900">Their Results:</h3>
                         </div>
-                        <ul className="mt-4 space-y-3">
-                          {testimonials[currentTestimonial].results.map((result, index) => (
-                            <li key={index} className="flex items-start">
-                              <Check className="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" />
-                              <span className="ml-3 text-gray-700">{result}</span>
-                            </li>
-                          ))}
-                        </ul>
+                      </footer>
+                    </blockquote>
+                  </div>
+                  <div className="mt-12 md:mt-0 md:flex-1">
+                    <div className="bg-white p-6 rounded-lg shadow">
+                      <div className="flex items-center">
+                        <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <h3 className="ml-2 text-lg font-medium text-gray-900">Their Results:</h3>
+                      </div>
+                      <ul className="mt-4 space-y-3">
+                        {testimonials[currentTestimonial].results.map((result, index) => (
+                          <li key={index} className="flex items-start">
+                            <Check className="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5" />
+                            <span className="ml-3 text-gray-700">{result}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-6">
+                        {isAuthenticated ? (
+                          <Link
+                            to="/inventory"
+                            className="inline-flex items-center text-green-600 hover:text-green-800 text-sm font-medium"
+                          >
+                            Open your inventory
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/register"
+                            className="inline-flex items-center text-green-600 hover:text-green-800 text-sm font-medium"
+                          >
+                            Create account to get started
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-12 flex justify-center space-x-2"
-          >
+          <div className="mt-12 flex justify-center space-x-2">
             {testimonials.map((_, index) => (
               <button
                 key={index}
@@ -771,64 +692,37 @@ function BasicFeatures() {
                 aria-label={`Go to testimonial ${index + 1}`}
               />
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="bg-green-700">
-        <div className="max-w-7xl mx-auto py-16 px-6 sm:py-24 lg:px-8">
-          <div className="text-center">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
+      {/* Final CTA */}
+      <div className="bg-white py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Ready to simplify your shop management?
+          </h2>
+          <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+            Start with our free plan - no commitment required.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              to="/demo"
+              className="flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 text-base font-medium text-white hover:from-green-700 hover:to-green-800 shadow-sm hover:shadow-md transition-all"
             >
-              Ready to simplify your shop management?
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-4 text-lg leading-6 text-green-200"
+              Live Demo
+            </Link>
+            <button
+              onClick={scrollToContact}
+              className="flex items-center justify-center rounded-md border border-green-600 px-6 py-3 text-base font-medium text-green-600 hover:bg-green-50 shadow-sm hover:shadow-md transition-all"
             >
-              Start with our free plan - no commitment required.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-            >
-              <Link
-                to="/register"
-                className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-green-700 hover:bg-green-50 shadow-sm hover:shadow-md transition-all"
-              >
-                Create Free Account
-              </Link>
-              <button
-                onClick={scrollToContact}
-                className="flex items-center justify-center rounded-md border border-white px-6 py-3 text-base font-medium text-white hover:bg-green-600 shadow-sm hover:shadow-md transition-all"
-              >
-                <MessageSquare className="mr-2 h-5 w-5" />
-                WhatsApp Help
-              </button>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-6"
-            >
-              <p className="text-sm text-green-200">
+              Contact Sales
+            </button>
+          </div>
+          <div className="mt-6">
+            <p className="text-sm text-gray-500">
               Works on any smartphone - no app download needed
-              </p>
-            </motion.div>
+            </p>
           </div>
         </div>
       </div>

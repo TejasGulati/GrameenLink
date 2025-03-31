@@ -24,7 +24,6 @@ import {
   BookOpen,
   Link as LinkIcon
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -243,9 +242,20 @@ function EnterpriseFeatures() {
     setTimeout(() => {
       const contactSection = document.getElementById('contact')
       if (contactSection) {
-        contactSection.scrollIntoView({ behavior: 'smooth' })
+        const contactCardToggle = contactSection.querySelector('[class*="cursor-pointer"]')
+        if (contactCardToggle) {
+          const isCollapsed = contactSection.querySelector('[class*="max-h-0"]')
+          if (isCollapsed) {
+            contactCardToggle.click()
+          }
+        }
+        
+        window.scrollTo({
+          top: contactSection.offsetTop - 60,
+          behavior: 'smooth'
+        })
       }
-    }, 100)
+    }, 150)
   }
 
   return (
@@ -256,12 +266,7 @@ function EnterpriseFeatures() {
         <div className="max-w-7xl mx-auto">
           <div className="relative z-10 pb-12 pt-24 sm:pt-32 lg:pb-16 lg:pt-40 px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center">
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl"
-              >
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
                 {isAuthenticated && user?.plan === 'enterprise' ? (
                   'Your Enterprise Platform'
                 ) : (
@@ -269,26 +274,16 @@ function EnterpriseFeatures() {
                     Enterprise Supply Chain Platform for <span className="text-blue-200">Rural Impact</span>
                   </>
                 )}
-              </motion.h1>
-              <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="mt-6 text-xl text-blue-100"
-              >
+              </h1>
+              <p className="mt-6 text-xl text-blue-100">
                 {isAuthenticated && user?.plan === 'enterprise' ? (
                   'Access all 6 integrated components below'
                 ) : (
                   'For funded startups and NGOs scaling rural operations with investor-grade visibility'
                 )}
-              </motion.p>
+              </p>
               {(!isAuthenticated || user?.plan !== 'enterprise') && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-                >
+                <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                   <Link
                     to="/demo"
                     className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-blue-700 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all"
@@ -313,15 +308,10 @@ function EnterpriseFeatures() {
                       <TrendingUp className="ml-2 h-4 w-4" />
                     </Link>
                   )}
-                </motion.div>
+                </div>
               )}
               {isAuthenticated && user?.plan === 'enterprise' && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-                >
+                <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                   <Link
                     to="/"
                     className="flex items-center justify-center rounded-md border border-transparent bg-white px-6 py-3 text-base font-medium text-blue-700 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all"
@@ -329,14 +319,9 @@ function EnterpriseFeatures() {
                     Go to Dashboard
                     <Activity className="ml-2 h-4 w-4" />
                   </Link>
-                </motion.div>
+                </div>
               )}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="mt-8 flex items-center justify-center space-x-4"
-              >
+              <div className="mt-8 flex items-center justify-center space-x-4">
                 <div className="flex -space-x-2">
                   <img
                     className="inline-block h-8 w-8 rounded-full ring-2 ring-blue-600"
@@ -357,7 +342,7 @@ function EnterpriseFeatures() {
                 <p className="text-sm text-blue-100">
                   Trusted by <span className="font-semibold">30+</span> funded organizations
                 </p>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -368,13 +353,7 @@ function EnterpriseFeatures() {
         <div className="lg:mx-auto lg:max-w-7xl lg:px-8 lg:grid lg:grid-cols-2 lg:gap-24 lg:items-start">
           <div className="relative sm:py-16 lg:py-0">
             <div className="relative mx-auto max-w-md px-6 sm:max-w-3xl lg:max-w-none lg:px-0">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="relative pt-64 pb-10 rounded-2xl shadow-xl overflow-hidden"
-              >
+              <div className="relative pt-64 pb-10 rounded-2xl shadow-xl overflow-hidden">
                 <div ref={dashboardRef} className="absolute inset-0 bg-blue-900 rounded-2xl">
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-900 to-blue-800 opacity-90"></div>
                   <div className="relative px-8 pt-8">
@@ -385,7 +364,6 @@ function EnterpriseFeatures() {
                       </span>
                     </div>
                     
-                    {/* Enhanced Dashboard Visualization */}
                     <div className="mt-6 grid grid-cols-3 gap-2">
                       {[
                         { icon: <Truck className="mx-auto h-5 w-5 text-blue-300" />, value: "8", label: "Vans Active", trend: "up" },
@@ -454,44 +432,26 @@ function EnterpriseFeatures() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
 
           <div className="relative mx-auto max-w-md px-6 sm:max-w-3xl lg:px-0">
             <div className="pt-12 sm:pt-16 lg:pt-20">
-              <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-              >
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Investor-Grade <span className="text-blue-600">Visibility</span>
-              </motion.h2>
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="mt-6 space-y-6 text-gray-500"
-              >
+              </h2>
+              <div className="mt-6 space-y-6 text-gray-500">
                 <p className="text-lg">
                   Our enterprise platform provides the operational control and reporting capabilities needed to scale rural supply chains efficiently while attracting investment.
                 </p>
                 <p className="text-base">
                   Designed for organizations with funding looking to maximize impact while maintaining financial sustainability.
                 </p>
-              </motion.div>
+              </div>
             </div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-10"
-            >
+            <div className="mt-10">
               <dl className="grid grid-cols-2 gap-x-4 gap-y-8">
                 {stats.map((stat) => (
                   <div key={stat.name} className="border-t-2 border-gray-100 pt-6">
@@ -507,7 +467,7 @@ function EnterpriseFeatures() {
                   </div>
                 ))}
               </dl>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -515,35 +475,19 @@ function EnterpriseFeatures() {
       {/* Features Section */}
       <div className="py-16 bg-gray-50 sm:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto text-center"
-          >
+          <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               Comprehensive Feature Set
             </h2>
             <p className="mt-4 text-lg text-gray-500">
               Everything you need to manage complex rural supply chains at scale
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-16 space-y-6 max-w-5xl mx-auto"
-          >
+          <div className="mt-16 space-y-6 max-w-5xl mx-auto">
             {features.map((feature, index) => (
-              <motion.div 
+              <div 
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
                 className="overflow-hidden bg-white shadow sm:rounded-lg hover:shadow-md transition-shadow"
               >
                 <button
@@ -567,157 +511,122 @@ function EnterpriseFeatures() {
                     )}
                   </div>
                 </button>
-                <AnimatePresence>
-                  {expandedFeature === index && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-6 pb-6"
-                    >
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-3">CAPABILITIES</h4>
-                          <ul className="space-y-3">
-                            {feature.details.map((detail, i) => (
-                              <li key={i} className="flex items-start">
-                                <Check className="flex-shrink-0 h-5 w-5 text-blue-500 mr-2 mt-0.5" />
-                                <span className="text-gray-700">{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                          <h4 className="text-sm font-medium text-gray-500 mb-3">INVESTOR IMPACT</h4>
-                          <p className="text-blue-700 font-medium">{feature.benefit}</p>
-                          <div className="mt-3 flex items-center text-sm text-gray-500">
-                            <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                            </svg>
-                            Verified with pilot customers
-                          </div>
+                {expandedFeature === index && (
+                  <div className="px-6 pb-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-3">CAPABILITIES</h4>
+                        <ul className="space-y-3">
+                          {feature.details.map((detail, i) => (
+                            <li key={i} className="flex items-start">
+                              <Check className="flex-shrink-0 h-5 w-5 text-blue-500 mr-2 mt-0.5" />
+                              <span className="text-gray-700">{detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <h4 className="text-sm font-medium text-gray-500 mb-3">INVESTOR IMPACT</h4>
+                        <p className="text-blue-700 font-medium">{feature.benefit}</p>
+                        <div className="mt-3 flex items-center text-sm text-gray-500">
+                          <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                          </svg>
+                          Verified with pilot customers
                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
       
       {/* Case Studies */}
       <div className="bg-white py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto text-center"
-          >
+          <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               Proven Impact
             </h2>
             <p className="mt-4 text-lg text-gray-500">
               How organizations are using our platform to scale rural operations
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-16 flow-root"
-          >
+          <div className="mt-16 flow-root">
             <div className="-my-12">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentCaseStudy}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="py-12"
-                >
-                  <div className="md:flex md:items-center md:justify-between md:space-x-14">
-                    <div className="pt-8 md:flex-1 md:pt-0">
-                      <div className="flex items-center mb-4">
-                        <img 
-                          src={caseStudies[currentCaseStudy].logo} 
-                          alt={caseStudies[currentCaseStudy].title}
-                          className="h-12 w-12 object-cover rounded-full mr-4"
-                        />
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">{caseStudies[currentCaseStudy].title}</h3>
-                          <p className="text-blue-600 text-sm">
-                            <MapPin className="inline h-4 w-4 mr-1" />
-                            {caseStudies[currentCaseStudy].location}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="space-y-6">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-2">CHALLENGE</h4>
-                          <p className="text-gray-700">{caseStudies[currentCaseStudy].challenge}</p>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-500 mb-2">OUR SOLUTION</h4>
-                          <p className="text-gray-700">{caseStudies[currentCaseStudy].solution}</p>
-                        </div>
+              <div key={currentCaseStudy} className="py-12">
+                <div className="md:flex md:items-center md:justify-between md:space-x-14">
+                  <div className="pt-8 md:flex-1 md:pt-0">
+                    <div className="flex items-center mb-4">
+                      <img 
+                        src={caseStudies[currentCaseStudy].logo} 
+                        alt={caseStudies[currentCaseStudy].title}
+                        className="h-12 w-12 object-cover rounded-full mr-4"
+                      />
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">{caseStudies[currentCaseStudy].title}</h3>
+                        <p className="text-blue-600 text-sm">
+                          <MapPin className="inline h-4 w-4 mr-1" />
+                          {caseStudies[currentCaseStudy].location}
+                        </p>
                       </div>
                     </div>
-                    <div className="mt-12 md:mt-0 md:flex-1">
-                      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                        <div className="flex items-center">
-                          <Target className="h-6 w-6 text-blue-600" />
-                          <h3 className="ml-2 text-lg font-medium text-gray-900">Key Results</h3>
-                        </div>
-                        <ul className="mt-4 space-y-3">
-                          {caseStudies[currentCaseStudy].results.map((result, index) => (
-                            <li key={index} className="flex items-start">
-                              <Check className="flex-shrink-0 h-5 w-5 text-blue-500 mt-0.5" />
-                              <span className="ml-3 text-gray-700">{result}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="mt-6">
-                          {isAuthenticated ? (
-                            <Link
-                              to="/"
-                              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                              View your dashboard
-                              <ArrowRight className="ml-1 h-4 w-4" />
-                            </Link>
-                          ) : (
-                            <Link
-                              to="/register"
-                              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-                            >
-                              Create account to get started
-                              <ArrowRight className="ml-1 h-4 w-4" />
-                            </Link>
-                          )}
-                        </div>
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">CHALLENGE</h4>
+                        <p className="text-gray-700">{caseStudies[currentCaseStudy].challenge}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500 mb-2">OUR SOLUTION</h4>
+                        <p className="text-gray-700">{caseStudies[currentCaseStudy].solution}</p>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                  <div className="mt-12 md:mt-0 md:flex-1">
+                    <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                      <div className="flex items-center">
+                        <Target className="h-6 w-6 text-blue-600" />
+                        <h3 className="ml-2 text-lg font-medium text-gray-900">Key Results</h3>
+                      </div>
+                      <ul className="mt-4 space-y-3">
+                        {caseStudies[currentCaseStudy].results.map((result, index) => (
+                          <li key={index} className="flex items-start">
+                            <Check className="flex-shrink-0 h-5 w-5 text-blue-500 mt-0.5" />
+                            <span className="ml-3 text-gray-700">{result}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-6">
+                        {isAuthenticated ? (
+                          <Link
+                            to="/"
+                            className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View your dashboard
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/register"
+                            className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            Create account to get started
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-12 flex justify-center space-x-2"
-          >
+          <div className="mt-12 flex justify-center space-x-2">
             {caseStudies.map((_, index) => (
               <button
                 key={index}
@@ -726,7 +635,7 @@ function EnterpriseFeatures() {
                 aria-label={`Go to case study ${index + 1}`}
               />
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
 
@@ -734,35 +643,19 @@ function EnterpriseFeatures() {
       {(!isAuthenticated || user?.plan !== 'enterprise') && (
         <div className="bg-gray-50 py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl mx-auto text-center"
-            >
+            <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Flexible Pricing
               </h2>
               <p className="mt-4 text-lg text-gray-500">
                 Scale your investment as you grow your impact
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-            >
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {pricingTiers.map((tier, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
                   className={`rounded-2xl shadow-lg overflow-hidden ${
                     tier.recommended ? 'ring-2 ring-blue-500 transform md:-translate-y-2' : 'border border-gray-200'
                   }`}
@@ -814,17 +707,11 @@ function EnterpriseFeatures() {
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-12 bg-white p-6 rounded-xl shadow-sm max-w-3xl mx-auto"
-            >
+            <div className="mt-12 bg-white p-6 rounded-xl shadow-sm max-w-3xl mx-auto">
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900">Need custom implementation?</h3>
                 <p className="mt-2 text-gray-600">
@@ -840,7 +727,7 @@ function EnterpriseFeatures() {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       )}
@@ -849,27 +736,15 @@ function EnterpriseFeatures() {
       <div className="bg-gradient-to-br from-blue-900 to-blue-800 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="md:flex md:items-center md:justify-between">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="md:w-1/2"
-            >
+            <div className="md:w-1/2">
               <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                 Investor Ready Metrics
               </h2>
               <p className="mt-4 text-lg text-blue-100 max-w-lg">
                 Our platform provides the transparency and reporting investors demand for rural impact ventures.
               </p>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="mt-8 md:mt-0 md:w-1/2"
-            >
+            </div>
+            <div className="mt-8 md:mt-0 md:w-1/2">
               <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20">
                 <h3 className="text-lg font-medium text-white mb-4">Key Investor Features:</h3>
                 <ul className="space-y-3">
@@ -896,7 +771,7 @@ function EnterpriseFeatures() {
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -904,31 +779,13 @@ function EnterpriseFeatures() {
       {/* Final CTA */}
       <div className="bg-white py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
-          >
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Ready to transform your rural operations?
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto"
-          >
+          </h2>
+          <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
             Schedule a demo to see how our enterprise platform can scale your impact while attracting investment.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-10 flex flex-col sm:flex-row justify-center gap-4"
-          >
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
             <Link
               to="/demo"
               className="flex items-center justify-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-base font-medium text-white hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md transition-all"
@@ -941,7 +798,7 @@ function EnterpriseFeatures() {
             >
               Contact Sales
             </button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

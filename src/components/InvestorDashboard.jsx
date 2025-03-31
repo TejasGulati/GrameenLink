@@ -27,9 +27,10 @@ import {
   Sun
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import Navbar from './Navbar'
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { useAuth } from '../context/AuthContext'
 
 const data = [
   { name: "Tech", value: 45, color: "#22c55e" },
@@ -45,6 +46,7 @@ const InvestorDashboard = () => {
   const [selectedMetric, setSelectedMetric] = useState('revenue')
   const [isScrolled, setIsScrolled] = useState(false)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+  const { isAuthenticated, user, setUser } = useAuth()
 
   // Projected data - replace with real API calls when available
   const [metrics, setMetrics] = useState({
@@ -144,43 +146,54 @@ const InvestorDashboard = () => {
     return windowWidth < 768 ? simplifiedFinancialData : fullFinancialData
   }
 
-  // Animated bar chart component
-const AnimatedBarChart = ({ data, metric }) => {
-  const maxValue = Math.max(...data.map(item => item[metric]))
-  const barCount = data.length
-  const barWidth = Math.max(30, (100 / barCount) - 2) // Ensure minimum width
-  
-  return (
-    <div className="flex items-end h-60 space-x-1 md:space-x-2 pt-16 overflow-x-auto pb-2"> {/* Increased height and padding-top */}
-      {data.map((item, index) => (
-        <motion.div 
-          key={index}
-          initial={{ height: 0 }}
-          animate={{ height: `${(item[metric] / maxValue) * 100}%` }}
-          transition={{ duration: 0.8, delay: index * 0.1 }}
-          className={`bg-gradient-to-t from-green-500 to-green-400 rounded-t-sm relative group`}
-          style={{ width: `${barWidth}%`, minWidth: '30px' }}
-        >
-          <div className="absolute -top-10 left-0 right-0 text-center text-xs font-medium whitespace-nowrap">
-            {item.month}
-          </div>
-          <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            {metric === 'revenue' ? formatCurrency(item[metric]) : formatCurrency(item[metric])}
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
   const scrollToContact = () => {
     navigate('/')
     setTimeout(() => {
       const contactSection = document.getElementById('contact')
       if (contactSection) {
-        contactSection.scrollIntoView({ behavior: 'smooth' })
+        const contactCardToggle = contactSection.querySelector('[class*="cursor-pointer"]')
+        if (contactCardToggle) {
+          const isCollapsed = contactSection.querySelector('[class*="max-h-0"]')
+          if (isCollapsed) {
+            contactCardToggle.click()
+          }
+        }
+        
+        window.scrollTo({
+          top: contactSection.offsetTop - 60,
+          behavior: 'smooth'
+        })
       }
-    }, 100)
+    }, 150)
+  }
+
+  // Animated bar chart component
+  const AnimatedBarChart = ({ data, metric }) => {
+    const maxValue = Math.max(...data.map(item => item[metric]))
+    const barCount = data.length
+    const barWidth = Math.max(30, (100 / barCount) - 2) // Ensure minimum width
+    
+    return (
+      <div className="flex items-end h-60 space-x-1 md:space-x-2 pt-16 overflow-x-auto pb-2">
+        {data.map((item, index) => (
+          <motion.div 
+            key={index}
+            initial={{ height: 0 }}
+            animate={{ height: `${(item[metric] / maxValue) * 100}%` }}
+            transition={{ duration: 0.8, delay: index * 0.1 }}
+            className={`bg-gradient-to-t from-green-500 to-green-400 rounded-t-sm relative group`}
+            style={{ width: `${barWidth}%`, minWidth: '30px' }}
+          >
+            <div className="absolute -top-10 left-0 right-0 text-center text-xs font-medium whitespace-nowrap">
+              {item.month}
+            </div>
+            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+              {metric === 'revenue' ? formatCurrency(item[metric]) : formatCurrency(item[metric])}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -744,7 +757,7 @@ const AnimatedBarChart = ({ data, metric }) => {
                       className="relative pl-12"
                       whileHover={{ scale: 1.02 }}
                     >
-                                            <div className="absolute left-0 top-1 h-4 w-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 border-4 border-white shadow-md"></div>
+                      <div className="absolute left-0 top-1 h-4 w-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 border-4 border-white shadow-md"></div>
                       <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 hover:border-green-300 transition group">
                         <div className="flex justify-between items-start">
                           <h3 className="font-bold text-lg group-hover:text-green-700 transition">
