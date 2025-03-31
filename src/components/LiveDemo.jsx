@@ -27,6 +27,10 @@ import { useNavigate, Link } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
+// Import images directly
+import KioskInterfaceImage from '../assets/villkiosk.png'
+import BlockchainExplorerImage from '../assets/blckchain.png'
+
 const LiveDemo = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -42,13 +46,11 @@ const LiveDemo = () => {
     pulses: 70
   })
   
-  // Using refs to track map instances
   const mapRef = useRef(null)
   const droneMapRef = useRef(null)
   const markersRef = useRef([])
   const droneMarkerRef = useRef(null)
 
-  // Village data - potential future targets
   const villages = [
     { id: 'v1', name: 'Mohanpur', lat: 28.61, lng: 77.23, households: 120, lastDelivery: 'Not yet operational', distance: 8.5 },
     { id: 'v2', name: 'Sunderjhar', lat: 28.58, lng: 77.18, households: 85, lastDelivery: 'Not yet operational', distance: 5.2 },
@@ -56,7 +58,6 @@ const LiveDemo = () => {
     { id: 'v4', name: 'Chandrapur', lat: 28.63, lng: 77.33, households: 200, lastDelivery: 'Not yet operational', distance: 12.7 }
   ]
 
-  // Demo steps - potential future process
   const demoSteps = [
     { id: 'order', title: 'Village Order Placed', icon: <ShoppingCart /> },
     { id: 'inventory', title: 'Inventory Checked', icon: <Package /> },
@@ -66,7 +67,6 @@ const LiveDemo = () => {
     { id: 'kiosk', title: 'Kiosk Restocked', icon: <Smartphone /> }
   ]
 
-  // Navigation tabs - must match Navbar exactly
   const navTabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <BarChart2 size={18} /> },
     { id: 'solutions', label: 'Solutions', icon: <Layers size={18} /> },
@@ -77,12 +77,10 @@ const LiveDemo = () => {
     { id: 'partners', label: 'Partners', icon: <Hand size={18} /> }
   ]
 
-  // Generate random transaction hash
   const generateTxHash = () => {
     return '0x' + Math.random().toString(16).substr(2, 64)
   }
 
-  // Start/pause simulation
   const toggleSimulation = () => {
     if (simulationStatus === 'completed') {
       resetSimulation()
@@ -91,7 +89,6 @@ const LiveDemo = () => {
     setSimulationStatus(prev => prev === 'running' ? 'paused' : 'running')
   }
 
-  // Reset simulation
   const resetSimulation = () => {
     setSimulationStatus('paused')
     setCurrentStep(0)
@@ -110,7 +107,6 @@ const LiveDemo = () => {
     }
   }
 
-  // Initialize main map
   useEffect(() => {
     if (!mapRef.current && typeof window !== 'undefined') {
       const mapContainer = document.getElementById('map')
@@ -121,7 +117,6 @@ const LiveDemo = () => {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(mapInstance)
 
-        // Add warehouse marker
         L.marker([28.61, 77.20], {
           icon: L.divIcon({
             html: `<div class="bg-blue-600 text-white p-2 rounded-full shadow-lg">Warehouse</div>`,
@@ -129,7 +124,6 @@ const LiveDemo = () => {
           })
         }).addTo(mapInstance)
 
-        // Add village markers
         const newMarkers = villages.map(village => {
           return L.marker([village.lat, village.lng], {
             icon: L.divIcon({
@@ -152,7 +146,6 @@ const LiveDemo = () => {
     }
   }, [])
 
-  // Initialize drone map when drones tab is active
   useEffect(() => {
     if (activeTab === 'drones' && !droneMapRef.current && typeof window !== 'undefined') {
       const droneMapContainer = document.getElementById('drone-map')
@@ -163,7 +156,6 @@ const LiveDemo = () => {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(droneMapInstance)
 
-        // Add warehouse marker
         L.marker([28.61, 77.20], {
           icon: L.divIcon({
             html: `<div class="bg-blue-600 text-white p-2 rounded-full shadow-lg">Warehouse</div>`,
@@ -183,7 +175,6 @@ const LiveDemo = () => {
     }
   }, [activeTab])
 
-  // Run simulation
   useEffect(() => {
     if (simulationStatus !== 'running') return
 
@@ -197,13 +188,11 @@ const LiveDemo = () => {
         return nextStep
       })
 
-      // Update drone progress
       if (currentStep >= 3 && selectedVillage && droneMapRef.current) {
         setDroneProgress(prev => {
           const newProgress = prev + (100 / (demoSteps.length - 3))
           if (newProgress >= 100) return 100
           
-          // Update drone position on map
           const warehousePos = [28.61, 77.20]
           const villagePos = [selectedVillage.lat, selectedVillage.lng]
           
@@ -226,7 +215,6 @@ const LiveDemo = () => {
         })
       }
 
-      // Update inventory when delivery completes
       if (currentStep === 4) {
         setInventoryLevels(prev => ({
           rice: Math.max(0, prev.rice - 15),
@@ -240,14 +228,12 @@ const LiveDemo = () => {
     return () => clearInterval(timer)
   }, [simulationStatus, currentStep, selectedVillage])
 
-  // Generate transaction hash when blockchain step is reached
   useEffect(() => {
     if (currentStep === 2) {
       setTransactionHash(generateTxHash())
     }
   }, [currentStep])
 
-  // Select random village when simulation starts
   useEffect(() => {
     if (simulationStatus === 'running' && !selectedVillage) {
       const randomVillage = villages[Math.floor(Math.random() * villages.length)]
@@ -255,7 +241,6 @@ const LiveDemo = () => {
     }
   }, [simulationStatus, selectedVillage])
 
-  // Scroll to contact section
   const scrollToContact = () => {
     navigate('/')
     setTimeout(() => {
@@ -312,7 +297,7 @@ const LiveDemo = () => {
         </div>
       </div>
 
-      {/* Navigation Tabs - Synced with Navbar */}
+      {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto py-1 hide-scrollbar">
@@ -345,7 +330,6 @@ const LiveDemo = () => {
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h2 className="text-xl font-bold mb-6">Potential Future Supply Chain Process</h2>
                 <div className="relative">
-                  {/* Progress line */}
                   <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200">
                     <div 
                       className="bg-green-500 w-0.5 transition-all duration-500"
@@ -353,7 +337,6 @@ const LiveDemo = () => {
                     ></div>
                   </div>
                   
-                  {/* Steps */}
                   <div className="space-y-8">
                     {demoSteps.map((step, index) => (
                       <div key={step.id} className="relative pl-12">
@@ -376,7 +359,6 @@ const LiveDemo = () => {
                               {index === currentStep && simulationStatus === 'running' && (
                                 <p className="text-sm text-gray-500 mt-1 animate-pulse">Processing...</p>
                               )}
-                              {/* Step-specific content */}
                               {index === currentStep && (
                                 <AnimatePresence>
                                   <motion.div
@@ -701,19 +683,12 @@ const LiveDemo = () => {
                   </p>
                 </div>
               </div>
-              <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <Shield className="mx-auto h-12 w-12 text-gray-400 mb-2" />
-                  <p className="text-gray-500">Potential Blockchain Explorer Interface</p>
-                  {transactionHash && (
-                    <button 
-                      onClick={() => alert(`This would view transaction ${transactionHash} in a potential explorer`)}
-                      className="mt-3 text-sm bg-gray-800 text-white px-3 py-1 rounded"
-                    >
-                      View Sample Transaction
-                    </button>
-                  )}
-                </div>
+              <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src={BlockchainExplorerImage} 
+                  alt="Blockchain Explorer Interface"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
           </div>
@@ -798,7 +773,7 @@ const LiveDemo = () => {
                 <div className="mt-4">
                   <div className="flex justify-between text-sm text-gray-500 mb-1">
                     <span>0%</span>
-                    <span>{droneProgress.toFixed(1)}%</span>
+                    <span>{droneProgress}%</span>
                     <span>100%</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -854,9 +829,9 @@ const LiveDemo = () => {
                   </motion.div>
                 ))}
               </div>
-              <div className="mt-6 bg-green-50 p-4 rounded-lg border border-green-100">
-                <h3 className="font-medium text-green-800 mb-2">Regulatory Compliance</h3>
-                <p className="text-sm text-green-700">
+              <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h3 className="font-medium text-blue-800 mb-2">Regulatory Compliance</h3>
+                <p className="text-sm text-blue-700">
                   All potential drone operations would require DGCA approval with full insurance coverage and operate within 
                   designated green zones at altitudes below 120m.
                 </p>
@@ -870,85 +845,27 @@ const LiveDemo = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <h2 className="text-xl font-bold mb-6">Potential Village Kiosk Interface</h2>
-              <div className="bg-gray-900 rounded-lg p-4 h-96 flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  </div>
-                  <div className="text-white text-sm">Potential GrameenLink Kiosk OS</div>
-                  <div className="w-8"></div>
+              <div className="bg-gray-100 rounded-lg overflow-hidden">
+                <img 
+                  src={KioskInterfaceImage} 
+                  alt="Village Kiosk Interface"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+              <div className="mt-4">
+                <div className="flex justify-between text-sm text-gray-500 mb-1">
+                  <span>0%</span>
+                  <span>{currentStep >= 5 ? '100%' : '0%'}</span>
                 </div>
-                <div className="bg-gray-800 rounded-lg flex-1 p-4 text-white">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-medium">Potential Village Supply Hub</h3>
-                    <div className="bg-green-600 text-xs px-2 py-1 rounded-full">
-                      {selectedVillage?.name || 'Offline Mode'}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    {[
-                      { name: 'Rice', price: '₹45/kg', stock: inventoryLevels.rice },
-                      { name: 'Flour', price: '₹32/kg', stock: inventoryLevels.flour },
-                      { name: 'Oil', price: '₹110/L', stock: inventoryLevels.oil },
-                      { name: 'Pulses', price: '₹65/kg', stock: inventoryLevels.pulses }
-                    ].map((item, index) => (
-                      <motion.div 
-                        key={index}
-                        whileHover={{ scale: 1.02 }}
-                        className="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 transition cursor-pointer"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-gray-400">{item.price}</p>
-                          </div>
-                          <div className="text-xs bg-gray-600 px-2 py-1 rounded-full">
-                            {item.stock}% in stock
-                          </div>
-                        </div>
-                        <div className="mt-2 h-1 bg-gray-600 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-green-500" 
-                            style={{ width: `${item.stock}%` }}
-                          ></div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <div className="bg-gray-700 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Sample Transactions</h4>
-                    <div className="space-y-3">
-                      {[
-                        { id: '#3287', items: '2kg Rice, 1L Oil', amount: '₹200' },
-                        { id: '#3286', items: '5kg Flour', amount: '₹160' },
-                        { id: '#3285', items: '3kg Pulses', amount: '₹195' }
-                      ].map((tx, index) => (
-                        <motion.div 
-                          key={index}
-                          whileHover={{ x: 5 }}
-                          className="flex justify-between text-sm hover:bg-gray-600 p-2 rounded cursor-pointer"
-                        >
-                          <div>
-                            <p className="font-mono text-gray-400">{tx.id}</p>
-                            <p className="text-gray-300">{tx.items}</p>
-                          </div>
-                          <p className="font-medium">{tx.amount}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-center text-xs text-gray-500">
-                    {currentStep >= 5 ? (
-                      <p className="text-green-400">✓ Simulated inventory update via blockchain</p>
-                    ) : (
-                      <p>Last sync: {selectedVillage?.lastDelivery || 'unknown'}</p>
-                    )}
-                  </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 transition-all duration-500"
+                    style={{ width: `${currentStep >= 5 ? 100 : 0}%` }}
+                  ></div>
+                </div>
+                <div className="mt-2 flex justify-between text-xs text-gray-500">
+                  <span>Warehouse</span>
+                  <span>{selectedVillage?.name || 'Village'}</span>
                 </div>
               </div>
             </div>
@@ -1143,3 +1060,4 @@ const LiveDemo = () => {
 }
 
 export default LiveDemo
+

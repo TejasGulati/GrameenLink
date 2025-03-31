@@ -44,6 +44,7 @@ const InvestorDashboard = () => {
   const [roiInput, setRoiInput] = useState(100)
   const [selectedMetric, setSelectedMetric] = useState('revenue')
   const [isScrolled, setIsScrolled] = useState(false)
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
 
   // Projected data - replace with real API calls when available
   const [metrics, setMetrics] = useState({
@@ -58,7 +59,8 @@ const InvestorDashboard = () => {
     churn: 3.5       // Projected churn rate percentage
   })
 
-  const financialData = [
+  // Simplified financial data for small screens
+  const fullFinancialData = [
     { month: 'Apr 2025', revenue: 0, profit: -15000 },
     { month: 'May 2025', revenue: 5000, profit: -12000 },
     { month: 'Jun 2025', revenue: 12000, profit: -8000 },
@@ -71,6 +73,13 @@ const InvestorDashboard = () => {
     { month: 'Jan 2026', revenue: 85000, profit: 30000 },
     { month: 'Feb 2026', revenue: 105000, profit: 40000 },
     { month: 'Mar 2026', revenue: 125000, profit: 50000 }
+  ]
+
+  const simplifiedFinancialData = [
+    { month: 'Q2 2025', revenue: 10000, profit: -10000 },
+    { month: 'Q3 2025', revenue: 30000, profit: -5000 },
+    { month: 'Q4 2025', revenue: 60000, profit: 10000 },
+    { month: 'Q1 2026', revenue: 90000, profit: 30000 }
   ]
 
   const teamMembers = [
@@ -101,8 +110,18 @@ const InvestorDashboard = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
     }
+    
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+    
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   // Calculate ROI based on input
@@ -120,31 +139,39 @@ const InvestorDashboard = () => {
     }).format(value)
   }
 
-  // Animated bar chart component
-  const AnimatedBarChart = ({ data, metric }) => {
-    const maxValue = Math.max(...data.map(item => item[metric]))
-    
-    return (
-      <div className="flex items-end h-48 space-x-2 pt-4">
-        {data.map((item, index) => (
-          <motion.div 
-            key={index}
-            initial={{ height: 0 }}
-            animate={{ height: `${(item[metric] / maxValue) * 100}%` }}
-            transition={{ duration: 0.8, delay: index * 0.1 }}
-            className="flex-1 bg-gradient-to-t from-green-500 to-green-400 rounded-t-sm relative group"
-          >
-            <div className="absolute -top-8 left-0 right-0 text-center text-xs font-medium">
-              {item.month}
-            </div>
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {metric === 'revenue' ? formatCurrency(item[metric]) : formatCurrency(item[metric])}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    )
+  // Get appropriate financial data based on screen size
+  const getFinancialData = () => {
+    return windowWidth < 768 ? simplifiedFinancialData : fullFinancialData
   }
+
+  // Animated bar chart component
+const AnimatedBarChart = ({ data, metric }) => {
+  const maxValue = Math.max(...data.map(item => item[metric]))
+  const barCount = data.length
+  const barWidth = Math.max(30, (100 / barCount) - 2) // Ensure minimum width
+  
+  return (
+    <div className="flex items-end h-60 space-x-1 md:space-x-2 pt-16 overflow-x-auto pb-2"> {/* Increased height and padding-top */}
+      {data.map((item, index) => (
+        <motion.div 
+          key={index}
+          initial={{ height: 0 }}
+          animate={{ height: `${(item[metric] / maxValue) * 100}%` }}
+          transition={{ duration: 0.8, delay: index * 0.1 }}
+          className={`bg-gradient-to-t from-green-500 to-green-400 rounded-t-sm relative group`}
+          style={{ width: `${barWidth}%`, minWidth: '30px' }}
+        >
+          <div className="absolute -top-10 left-0 right-0 text-center text-xs font-medium whitespace-nowrap">
+            {item.month}
+          </div>
+          <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            {metric === 'revenue' ? formatCurrency(item[metric]) : formatCurrency(item[metric])}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
 
   const scrollToContact = () => {
     navigate('/')
@@ -465,9 +492,9 @@ const InvestorDashboard = () => {
                   </div>
                 </div>
                 <div className="h-80 bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <AnimatedBarChart data={financialData} metric={selectedMetric} />
+                  <AnimatedBarChart data={getFinancialData()} metric={selectedMetric} />
                   <div className="mt-4 text-center text-sm text-gray-500">
-                    {selectedMetric === 'revenue' ? 'Projected Monthly Revenue' : 'Projected Monthly Profit'}
+                    {selectedMetric === 'revenue' ? 'Projected Revenue' : 'Projected Profit'}
                   </div>
                 </div>
               </div>
@@ -557,31 +584,31 @@ const InvestorDashboard = () => {
                 </div>
               </div>
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
-      <h2 className="text-xl font-bold mb-4 flex items-center">
-        <DollarSign className="mr-2 text-teal-600" size={20} /> Projected Use of Funds
-      </h2>
-      <div className="flex justify-center">
-        <PieChart width={300} height={200}>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={40}
-            outerRadius={80}
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip formatter={(value) => `${value}%`} />
-        </PieChart>
-      </div>
-      <div className="text-center mt-4">
-        <div className="text-sm text-gray-500">Seed Round</div>
-        <div className="font-bold text-lg text-gray-700">$500K</div>
-      </div>
-    </div>
+                <h2 className="text-xl font-bold mb-4 flex items-center">
+                  <DollarSign className="mr-2 text-teal-600" size={20} /> Projected Use of Funds
+                </h2>
+                <div className="flex justify-center">
+                  <PieChart width={300} height={200}>
+                    <Pie
+                      data={data}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      dataKey="value"
+                    >
+                      {data.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `${value}%`} />
+                  </PieChart>
+                </div>
+                <div className="text-center mt-4">
+                  <div className="text-sm text-gray-500">Seed Round</div>
+                  <div className="font-bold text-lg text-gray-700">$500K</div>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -717,7 +744,7 @@ const InvestorDashboard = () => {
                       className="relative pl-12"
                       whileHover={{ scale: 1.02 }}
                     >
-                      <div className="absolute left-0 top-1 h-4 w-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 border-4 border-white shadow-md"></div>
+                                            <div className="absolute left-0 top-1 h-4 w-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 border-4 border-white shadow-md"></div>
                       <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 hover:border-green-300 transition group">
                         <div className="flex justify-between items-start">
                           <h3 className="font-bold text-lg group-hover:text-green-700 transition">
