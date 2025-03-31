@@ -26,7 +26,7 @@ import {
   Settings,
   Key
 } from 'lucide-react'
-import logo from '../assets/logo.png'
+import logo from '../assets/logo-1.png'
 import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
@@ -76,8 +76,7 @@ function Navbar() {
           id: 'demo', 
           name: "Live Demo", 
           path: "/demo", 
-          icon: <BarChart2 size={18} />,
-          highlight: true
+          icon: <BarChart2 size={18} />
         }
       ]
     }
@@ -285,6 +284,8 @@ function Navbar() {
 
           <div className="hidden lg:flex items-center space-x-2">
             <NavLinks />
+            
+            {/* Auth buttons for desktop */}
             {isAuthenticated ? (
               <div ref={userMenuRef} className="relative">
                 <button 
@@ -345,31 +346,50 @@ function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <>
+              <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="px-4 py-2 text-sm text-gray-700 hover:text-green-600 transition-colors"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-green-600 rounded-md transition-colors hover:bg-gradient-to-r from-green-50/50 to-blue-50/50 border border-transparent hover:border-gray-200"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white text-sm rounded-md hover:from-green-700 hover:to-teal-700 transition-all"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-green-600 rounded-md transition-colors hover:bg-gradient-to-r from-green-50/50 to-blue-50/50 border border-transparent hover:border-gray-200"
                 >
                   Register
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
-          <div className="flex lg:hidden items-center">
+          <div className="flex lg:hidden items-center space-x-2">
+            {/* Auth buttons for mobile */}
+            {!isAuthenticated && (
+              <div className="flex items-center mr-2">
+                <Link
+                  to="/login"
+                  className="flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-green-600 rounded-md transition-colors hover:bg-gradient-to-r from-green-50/50 to-blue-50/50 border border-transparent hover:border-gray-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="flex items-center px-3 py-1.5 text-xs text-gray-700 hover:text-green-600 rounded-md transition-colors hover:bg-gradient-to-r from-green-50/50 to-blue-50/50 border border-transparent hover:border-gray-200"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+            
             {isAuthenticated && (
-              <div className="relative mr-2">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-green-600 to-teal-600 text-white font-medium">
+              <div className="mr-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-green-600 to-teal-600 text-white font-medium text-sm">
                   {getUserInitials()}
                 </div>
               </div>
             )}
+            
             <motion.button
               onClick={toggleMenu}
               whileHover={{ scale: 1.03 }}
@@ -452,8 +472,7 @@ function Navbar() {
                       className={`
                         flex items-center px-3 py-2 rounded-md transition-all
                         ${activeDropdown === item.id ? 'bg-gradient-to-r from-green-50 to-blue-50 shadow-xs' : 'hover:bg-gray-50/50'}
-                        ${item.highlight ? 'bg-green-50 text-green-700' : 'text-gray-700'}
-                        text-sm font-medium
+                        text-gray-700 text-sm font-medium
                         border border-transparent hover:border-gray-200
                       `}
                     >
@@ -526,11 +545,9 @@ function Navbar() {
                 className={`
                   flex items-center px-3 py-2 rounded-md transition-all
                   ${isMobile ? 'text-sm py-3 px-3' : 'text-sm'}
-                  ${item.highlight ? 
-                    'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 shadow-xs' : 
-                    'text-gray-700 hover:text-green-600 hover:bg-gradient-to-r from-green-50/50 to-blue-50/50'
-                  }
-                  border ${item.highlight ? 'border-green-600/30' : 'border-transparent hover:border-gray-200'}
+                  text-gray-700 hover:text-green-600
+                  hover:bg-gradient-to-r from-green-50/50 to-blue-50/50
+                  border border-transparent hover:border-gray-200
                 `}
               >
                 {item.icon && <span className={isMobile ? 'mr-2' : 'mr-2'}>{item.icon}</span>}
